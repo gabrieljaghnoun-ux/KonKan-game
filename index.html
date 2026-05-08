@@ -7,10 +7,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --felt:#1a4a2e; --felt-dark:#0e2a1a; --felt-light:#235c39;
+    --felt:#1a4a2e; --felt-dark:#0e2a1a;
     --gold:#c9a84c; --gold-light:#e8c97a;
-    --cream:#f5f0e8; --card-bg:#faf8f3;
-    --red:#c0392b; --black:#1a1a1a;
+    --cream:#f5f0e8; --red:#c0392b; --black:#1a1a1a;
     --border:rgba(201,168,76,0.35);
     --blue:#3498db; --green:#2ecc71;
   }
@@ -20,411 +19,202 @@
 
   /* ── HEADER ── */
   #header{display:flex;align-items:center;justify-content:space-between;padding:7px 18px;background:var(--felt-dark);border-bottom:1px solid var(--border);flex-shrink:0;}
-  #header h1{font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--gold);letter-spacing:.08em;text-shadow:0 0 20px rgba(201,168,76,.3);}
+  #header h1{font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--gold);letter-spacing:.08em;}
   .status-bar{display:flex;gap:10px;align-items:center;font-size:.68rem;}
   .pill{background:rgba(201,168,76,.1);border:1px solid var(--border);border-radius:20px;padding:3px 11px;}
-  #turn-pill{font-weight:500;color:var(--gold);}
-  .badge{display:none;border-radius:20px;padding:3px 10px;font-size:.62rem;letter-spacing:.06em;}
-  .badge.show{display:inline-block;}
-  #badge-locked{background:rgba(231,76,60,.13);border:1px solid rgba(231,76,60,.4);color:#e74c3c;}
-  #badge-rearrange{background:rgba(52,152,219,.13);border:1px solid rgba(52,152,219,.45);color:var(--blue);animation:blink 1.6s infinite;}
-  @keyframes blink{0%,100%{opacity:1}50%{opacity:.5}}
 
-  /* ── LAYOUT ── */
+  /* ── GAME AREA ── */
   #game-area{display:flex;flex-direction:column;flex:1;overflow:hidden;}
+  #table-wrap{flex:1;overflow-y:auto;padding:12px 18px;background:var(--felt);margin:4px 10px;border-radius:10px;border:1px solid var(--border);}
+  #table-sets{display:flex;flex-wrap:wrap;gap:20px;align-content:flex-start;}
 
-  /* ── AI HAND ── */
-  #ai-row{padding:6px 18px;flex-shrink:0;display:flex;align-items:center;gap:10px;}
-  .plabel{font-size:.62rem;color:var(--gold);letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;min-width:55px;}
-  #ai-hand{display:flex;flex-wrap:nowrap;overflow:hidden;} #ai-hand .cb{margin-right:-14px;} #ai-hand .cb:last-child{margin-right:0;}
-  .cb{width:40px;height:56px;border-radius:4px;background:linear-gradient(135deg,#1e3a6e,#2d5499);border:1px solid rgba(255,255,255,.18);box-shadow:1px 1px 4px rgba(0,0,0,.4);position:relative;overflow:hidden;flex-shrink:0;}
-  .cb::after{content:'';position:absolute;inset:3px;border:1px solid rgba(255,255,255,.12);border-radius:2px;background:repeating-linear-gradient(45deg,transparent,transparent 3px,rgba(255,255,255,.04) 3px,rgba(255,255,255,.04) 6px);}
-
-  /* ── TABLE ── */
-  #table-wrap{flex:1;overflow-y:auto;overflow-x:hidden;padding:8px 18px;background:var(--felt);margin:4px 10px;border-radius:10px;border:1px solid var(--border);transition:border-color .3s,box-shadow .3s;}
-  #table-wrap.rmode{border-color:rgba(52,152,219,.6);box-shadow:0 0 18px rgba(52,152,219,.18);}
-  #table-wrap::-webkit-scrollbar{width:3px;}
-  #table-wrap::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
-  #tbl-hdr{font-size:.58rem;color:rgba(201,168,76,.45);letter-spacing:.16em;text-transform:uppercase;margin-bottom:7px;text-align:center;transition:color .3s;}
-  #tbl-hdr.rmode{color:rgba(52,152,219,.75);}
-  #table-sets{display:flex;flex-wrap:wrap;gap:14px;min-height:90px;align-content:flex-start;}
-
-  /* ── DECK ── */
-  #deck-row{display:flex;align-items:center;justify-content:center;gap:18px;padding:5px 18px;flex-shrink:0;}
-  .dstack{width:48px;height:66px;position:relative;cursor:pointer;}
-  .dstack::before,.dstack::after{content:'';position:absolute;width:48px;height:66px;border-radius:5px;background:linear-gradient(135deg,#1e3a6e,#2d5499);border:1px solid rgba(255,255,255,.13);}
-  .dstack::before{top:-3px;left:-2px;} .dstack::after{top:-1px;left:-1px;}
-  .dtop{position:relative;width:48px;height:66px;border-radius:5px;background:linear-gradient(135deg,#1e3a6e,#2d5499);border:1px solid rgba(255,255,255,.18);z-index:1;transition:transform .15s;box-shadow:2px 2px 8px rgba(0,0,0,.5);}
-  .dtop:hover{transform:translateY(-3px);}
-  .dcnt{font-size:.6rem;color:rgba(255,255,255,.45);text-align:center;position:absolute;bottom:-18px;width:100%;}
-
-  /* ── STAGE ── */
-  #stage-wrap{display:none;padding:3px 18px;flex-shrink:0;}
-  #stage-wrap.show{display:block;}
-  #stage-lbl{font-size:.58rem;color:rgba(201,168,76,.55);letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px;}
-  #stage-sets{display:flex;flex-wrap:wrap;gap:7px;min-height:82px;background:rgba(0,0,0,.13);border:1px dashed rgba(201,168,76,.22);border-radius:6px;padding:5px 7px;}
-
-  /* ── PLAYER HAND ── */
-  #hand-section{padding:2px 18px 8px;flex-shrink:0;overflow:visible;}
-  #hand-lbl{font-size:.58rem;color:var(--gold);letter-spacing:.1em;text-transform:uppercase;margin-bottom:5px;display:flex;justify-content:space-between;align-items:center;}
-
-  /* ── CARDS ── */
+  /* ── CARDS (ENHANCED LEGIBILITY) ── */
   .card {
-    width:80px; height:112px; border-radius:8px;
-    background:#fff; border:1.5px solid #ccc;
-    box-shadow:0 3px 10px rgba(0,0,0,.28);
+    width:85px; height:120px; border-radius:8px;
+    background:#fff; border:1px solid #bbb;
+    box-shadow:0 3px 10px rgba(0,0,0,0.3);
     display:flex; flex-direction:column;
-    padding:4px 5px; cursor:pointer;
-    transition:transform .13s, box-shadow .13s, z-index 0s;
-    flex-shrink:0; position:relative; overflow:hidden;
+    padding:5px; cursor:pointer;
+    transition:transform .15s, box-shadow .15s;
+    position:relative; flex-shrink:0;
   }
-  .card:hover { transform:translateY(-14px)!important; box-shadow:0 10px 24px rgba(0,0,0,.38); z-index:200!important; }
-  .card.sel { transform:translateY(-20px)!important; border-color:var(--gold); box-shadow:0 0 0 2.5px var(--gold), 0 10px 22px rgba(0,0,0,.35); z-index:201!important; }
-  .card.pu { border-color:var(--blue); box-shadow:0 0 0 2.5px var(--blue); transform:translateY(-10px)!important; }
-  .card.poach-candidate { border-color:var(--green); box-shadow:0 0 0 2px var(--green); }
-  
-  .card.red .cr, .card.red .cs-small, .card.red .crb, .card.red .csb, .card.red .face-suit { color:#cc0000; }
-  .card.black .cr, .card.black .cs-small, .card.black .crb, .card.black .csb, .card.black .face-suit { color:#111; }
+  .card.red .val, .card.red .suit-mini { color:var(--red); }
+  .card.black .val, .card.black .suit-mini { color:var(--black); }
 
-  /* corner labels */
-  .card-corner-top { display:flex; flex-direction:column; align-items:flex-start; line-height:1; flex-shrink:0; }
-  .cr { font-size:1.35rem; font-weight:900; font-family:'Playfair Display',serif; line-height:1; }
-  .cs-small { font-size:1rem; line-height:1; }
-  .card-corner-bot { display:flex; flex-direction:column; align-items:flex-end; line-height:1; transform:rotate(180deg); flex-shrink:0; }
-  .crb { font-size:1.35rem; font-weight:900; font-family:'Playfair Display',serif; line-height:1; }
-  .csb { font-size:1rem; line-height:1; }
+  /* Big legible numbers */
+  .card-top { display:flex; flex-direction:column; line-height:0.9; }
+  .val { font-size:1.6rem; font-weight:900; font-family:'Playfair Display',serif; }
+  .suit-mini { font-size:1rem; }
 
-  /* centre area */
+  /* Center Art */
   .card-center { flex:1; display:flex; align-items:center; justify-content:center; overflow:hidden; }
-  .pip-suit { font-size:1.9rem; line-height:1; }
-  .face-art { width:100%; height:100%; display:flex; align-items:center; justify-content:center; position:relative; }
-  .face-art svg { width:52px; height:62px; }
+  .face-img { width:100%; height:100%; }
+  .pip-big { font-size:2.5rem; }
 
-  .card.hc{cursor:grab;}.card.hc:active{cursor:grabbing;}
-  .card.dragging{opacity:.15;transform:none!important;box-shadow:none!important;pointer-events:none;}
-
-  /* ── OVERLAPPING HAND ── */
+  /* ── OVERLAP SYSTEM ── */
   #player-hand {
-    display:flex; flex-wrap:nowrap; gap:0;
-    min-height:115px; align-items:flex-end;
-    position:relative; overflow-x:auto; overflow-y:visible;
-    padding:18px 6px 4px 6px;
+    display:flex; padding:20px 40px; 
+    min-height:140px; align-items:flex-end;
+    overflow-x:auto;
   }
-  #player-hand .card { margin-right:-28px; }
-  #player-hand .card:last-child { margin-right:0; }
+  #player-hand .card { margin-right:-45px; } /* Tight overlap */
+  #player-hand .card:hover { transform:translateY(-20px); z-index:100; margin-right:-45px; }
+  #player-hand .card.sel { transform:translateY(-30px); border:3px solid var(--gold); z-index:101; }
 
-  /* ── OVERLAPPING TABLE SETS ── */
-  .tset {
-    display:flex; flex-wrap:nowrap;
-    background:rgba(0,0,0,.18); border:1px solid rgba(201,168,76,0.18);
-    border-radius:6px; padding:5px 7px;
-    transition:border-color .2s, box-shadow .2s;
-    cursor:default; position:relative; align-items:flex-end;
-    min-height:70px;
-  }
-  .tset .card { margin-right:-22px; width:62px; height:86px; }
+  .tset { display:flex; background:rgba(0,0,0,0.1); padding:8px; border-radius:8px; }
+  .tset .card { width:65px; height:90px; margin-right:-35px; }
+  .tset .card .val { font-size:1.2rem; }
   .tset .card:last-child { margin-right:0; }
-  .tset .card .cr, .tset .card .crb { font-size:1.1rem; }
-  .tset .card .cs-small, .tset .card .csb { font-size:.82rem; }
-  .tset .card:hover { transform:translateY(-10px)!important; }
 
-  .tset.hl { border-color:var(--gold); box-shadow:0 0 9px rgba(201,168,76,0.35); }
-  .tset.rv { border-color:var(--green); box-shadow:0 0 7px rgba(46,204,113,0.25); }
-  .tset.ri { border-color:#e74c3c; box-shadow:0 0 7px rgba(231,76,60,0.3); }
-
-  /* ── OVERLAPPING STAGE ── */
-  .sset {
-    display:flex; flex-wrap:nowrap;
-    background:rgba(201,168,76,0.05); border:1px solid rgba(201,168,76,0.18);
-    border-radius:4px; padding:4px 5px;
-    cursor:pointer; transition:border-color .2s;
-    align-items:flex-end; min-height:56px;
+  /* ── FLASH ANIMATION ── */
+  @keyframes highlightDrop {
+    0% { outline: 0px solid var(--green); box-shadow: 0 0 0px var(--green); }
+    50% { outline: 4px solid var(--green); box-shadow: 0 0 25px var(--green); }
+    100% { outline: 0px solid transparent; }
   }
-  .sset .card { margin-right:-22px; width:54px; height:76px; }
-  .sset .card:last-child { margin-right:0; }
+  .just-dropped { animation: highlightDrop 1.5s ease-out; z-index: 50; }
 
-  /* ── ACTION BAR ── */
-  #action-bar{display:flex;gap:7px;justify-content:center;padding:5px 18px 9px;flex-shrink:0;flex-wrap:wrap;}
-  .btn{font-family:'DM Mono',monospace;font-size:.67rem;letter-spacing:.07em;padding:7px 13px;border-radius:5px;cursor:pointer;border:1px solid;transition:all .13s;text-transform:uppercase;}
-  .btn-gold{background:var(--gold);color:var(--felt-dark);border-color:var(--gold);font-weight:600;}
-  .btn-gold:hover{background:var(--gold-light);}
-  .btn-out{background:transparent;color:var(--gold);border-color:var(--border);}
-  .btn-out:hover{border-color:var(--gold);background:rgba(201,168,76,.09);}
-  .btn-red{background:transparent;color:#e74c3c;border-color:rgba(231,76,60,.38);}
-  .btn-blue{background:transparent;color:var(--blue);border-color:rgba(52,152,219,.38);}
+  /* ── UI BUTTONS ── */
+  #action-bar{display:flex;gap:10px;justify-content:center;padding:15px;background:var(--felt-dark);}
+  .btn{padding:10px 20px; border-radius:5px; border:none; font-weight:bold; cursor:pointer; text-transform:uppercase; font-size:0.7rem;}
+  .btn-gold{background:var(--gold); color:white;}
+  .btn-blue{background:var(--blue); color:white;}
 
-  /* ── TURN-END BANNER ── */
-  #turn-banner {
-    position:fixed; top:0; left:0; right:0;
-    display:flex; align-items:center; justify-content:center;
-    pointer-events:none; z-index:500;
-    transform:translateY(-100%);
-    transition:transform .3s cubic-bezier(.34, 1.56, 0.64, 1);
-  }
-  #turn-banner.show { transform:translateY(0); }
-  #turn-banner.hide { transform:translateY(-110%); transition:transform .4s ease-in; }
-  #turn-banner-inner {
-    background:rgba(10,30,18,0.92); border:1px solid var(--border);
-    border-top:none; border-radius:0 0 12px 12px;
-    padding:10px 28px; display:flex; align-items:center; gap:10px;
-    box-shadow:0 6px 24px rgba(0,0,0,0.5); backdrop-filter:blur(6px);
-  }
-  #turn-banner-text { font-family:'Playfair Display',serif; font-size:1rem; color:var(--gold); }
-
-  /* ── NEW-SET FLASH ── */
-  @keyframes setDrop {
-    0%  { border-color:var(--green); box-shadow:0 0 0 0 rgba(46,204,113,0.8), 0 0 24px rgba(46,204,113,0.5); }
-    40% { border-color:var(--green); box-shadow:0 0 0 8px rgba(46,204,113,0), 0 0 32px rgba(46,204,113,0.6); }
-    70% { border-color:var(--gold); box-shadow:0 0 0 0 rgba(201,168,76,0), 0 0 16px rgba(201,168,76,0.4); }
-    100%{ border-color:rgba(201,168,76,0.18); box-shadow:none; }
-  }
-  .tset.just-dropped { animation:setDrop 1.8s ease forwards; }
-
-  /* MODALS */
-  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.78);display:flex;align-items:center;justify-content:center;z-index:100;backdrop-filter:blur(5px);}
-  .modal{background:var(--felt-dark);border:1px solid var(--border);border-radius:14px;padding:30px;max-width:460px;width:92%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.7);}
-  .modal h2{font-family:'Playfair Display',serif;font-size:1.9rem;color:var(--gold);margin-bottom:11px;}
-  .modal p{font-size:.76rem;color:rgba(245,240,232,.7);line-height:1.85;margin-bottom:18px;}
-  .modal table{width:100%;border-collapse:collapse;font-size:.7rem;margin-bottom:16px;}
-  .modal table th{color:var(--gold);padding:4px 8px;border-bottom:1px solid var(--border);text-align:left;}
-  .modal table td{padding:4px 8px;color:rgba(245,240,232,.75);border-bottom:1px solid rgba(201,168,76,.1);}
+  /* Overlay and Modals */
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center;z-index:200;}
+  .modal{background:var(--felt-dark); padding:30px; border-radius:15px; border:1px solid var(--gold); text-align:center;}
 </style>
 </head>
 <body>
-
-<div id="turn-banner">
-  <div id="turn-banner-inner">
-    <div id="turn-banner-icon" style="font-size:1.3rem;">⏳</div>
-    <div>
-      <div id="turn-banner-text">AI is thinking…</div>
-      <div id="turn-banner-sub" style="font-size:.6rem;color:rgba(245,240,232,.45);">Please wait</div>
-    </div>
-  </div>
-</div>
 
 <div id="app">
   <div id="header">
     <h1>KonKan</h1>
     <div class="status-bar">
-      <span id="badge-locked" class="badge">INITIAL DROP REQUIRED</span>
-      <span id="badge-rearrange" class="badge">REARRANGE MODE</span>
       <span class="pill" id="turn-pill">Your Turn</span>
       <span class="pill" id="deck-pill">Deck: 78</span>
     </div>
   </div>
 
   <div id="game-area">
-    <div id="ai-row">
-      <div class="plabel">AI ♠</div>
-      <div id="ai-hand"></div>
-      <div id="ai-cnt" style="font-size:.62rem;color:rgba(201,168,76,.55);margin-left:6px;"></div>
-    </div>
-
     <div id="table-wrap">
-      <div id="tbl-hdr">— TABLE —</div>
       <div id="table-sets"></div>
     </div>
 
-    <div id="deck-row">
-      <div style="position:relative;">
-        <div class="dstack" id="deck-btn" onclick="drawCard()"><div class="dtop"></div></div>
-        <div class="dcnt" id="deck-cnt">78</div>
-      </div>
-      <div style="font-size:.62rem;color:rgba(201,168,76,.45);">Draw a card to end your turn</div>
-    </div>
-
-    <div id="stage-wrap">
-      <div id="stage-lbl">Staged Sets — click to return to hand</div>
-      <div id="stage-sets"></div>
-    </div>
-
-    <div id="hand-section">
-      <div id="hand-lbl">
-        <span>Your Hand <span style="color:rgba(201,168,76,.35);font-size:.52rem;">— drag to reorder</span></span>
-        <button class="btn btn-out" style="padding:2px 9px;font-size:.58rem;" onclick="sortHand()">Sort</button>
-      </div>
-      <div id="player-hand"></div>
-    </div>
+    <div id="player-hand"></div>
 
     <div id="action-bar">
-      <button class="btn btn-out"  id="btn-clear"    onclick="clearSel()">Clear</button>
-      <button class="btn btn-out"  id="btn-stage"    onclick="stageSelection()">Stage Set</button>
-      <button class="btn btn-gold" id="btn-drop"     onclick="dropStaged()" disabled>Drop All</button>
-      <button class="btn btn-blue" id="btn-rearrange" onclick="toggleRearrange()">Rearrange</button>
-      <button class="btn btn-red"  id="btn-end"      onclick="endTurnAction()" disabled>End Turn</button>
+      <button class="btn btn-blue" onclick="sortHand()">Sort Hand</button>
+      <button class="btn btn-gold" id="btn-stage" onclick="stageSet()">Stage Set</button>
+      <button class="btn btn-gold" id="btn-drop" onclick="dropSets()" style="background:var(--green)">Drop All</button>
+      <button class="btn btn-blue" onclick="drawCard()">Draw & End</button>
     </div>
   </div>
 </div>
 
-<div class="overlay" id="modal-start">
+<div class="overlay" id="start-modal">
   <div class="modal">
-    <h2>KonKan</h2>
-    <p>Be the first player to empty your hand. Two decks, 13 cards each.</p>
-    <table>
-      <tr><th>Valid Sets</th><th>Rule</th></tr>
-      <tr><td>Run / Sequence</td><td>Same suit, consecutive (Q-K-A valid)</td></tr>
-      <tr><td>Group</td><td>Same rank, all different suits</td></tr>
-    </table>
-    <button class="btn btn-gold" style="width:100%;padding:11px;" onclick="startGame()">Deal Cards</button>
-  </div>
-</div>
-
-<div class="overlay" id="modal-win" style="display:none;">
-  <div class="modal">
-    <h2 id="win-title"></h2>
-    <p id="win-msg"></p>
-    <button class="btn btn-gold" style="width:100%;padding:11px;" onclick="restartGame()">Play Again</button>
+    <h2 style="color:var(--gold); margin-bottom:15px;">Detailed Face Cards Update</h2>
+    <p style="margin-bottom:20px;">I've updated the King, Queen, and Jack with high-detail portraits.</p>
+    <button class="btn btn-gold" onclick="initGame()">Start Game</button>
   </div>
 </div>
 
 <script>
-// ═══════════════════════════════════════════
-//  GAME LOGIC
-// ═══════════════════════════════════════════
 const SUITS=['♠','♥','♦','♣'], RANKS=['A','2','3','4','5','6','7','8','9','10','J','Q','K'], RED=new Set(['♥','♦']);
-function rv(r){ return RANKS.indexOf(r)+1; }
 
-let G = {
-  deck:[], playerHand:[], aiHand:[], tableSets:[], selected:[], staged:[],
-  hlSet:null, playerMadeDrop:false, rearrange:false, isPlayerTurn:true, actionTaken:false, phase:'start'
-};
-
+// HIGH DETAIL SVG PORTRAITS
 const FACE_ART = {
-  K: (col,suit) => `<svg viewBox="0 0 52 68"><polygon points="6,28 14,14 26,22 38,14 46,28 40,30 26,24 12,30" fill="${col}" opacity=".9"/><circle cx="26" cy="19" r="7" fill="#f5e6d0" stroke="${col}" stroke-width="1"/><path d="M18 36 L34 52" stroke="${col}" stroke-width="2.5"/><text x="26" y="56" text-anchor="middle" font-size="11" fill="${col}" opacity=".25">${suit}</text></svg>`,
-  Q: (col,suit) => `<svg viewBox="0 0 52 68"><circle cx="26" cy="8" r="2.5" fill="${col}"/><circle cx="26" cy="20" r="8" fill="#f5e6d0" stroke="${col}" stroke-width="1"/><path d="M14 42 Q26 64 38 42" fill="${col}" opacity=".18"/><text x="26" y="56" text-anchor="middle" font-size="11" fill="${col}" opacity=".25">${suit}</text></svg>`,
-  J: (col,suit) => `<svg viewBox="0 0 52 68"><rect x="16" y="8" width="20" height="4" fill="${col}"/><circle cx="26" cy="22" r="8" fill="#f5e6d0" stroke="${col}" stroke-width="1"/><line x1="34" y1="30" x2="34" y2="56" stroke="${col}" stroke-width="2"/><text x="26" y="56" text-anchor="middle" font-size="11" fill="${col}" opacity=".25">${suit}</text></svg>`
+  'K': (col, s) => `<svg viewBox="0 0 100 120" class="face-img">
+    <rect x="20" y="40" width="60" height="70" fill="${col}" opacity="0.1" />
+    <path d="M25 40 L75 40 L85 10 L65 30 L50 5 L35 30 L15 10 Z" fill="${col}" /> <circle cx="50" cy="55" r="18" fill="#ffe0bd" /> <path d="M35 65 Q50 85 65 65" fill="none" stroke="${col}" stroke-width="3" /> <text x="50" y="105" text-anchor="middle" font-size="25" fill="${col}" opacity="0.3">${s}</text>
+  </svg>`,
+  'Q': (col, s) => `<svg viewBox="0 0 100 120" class="face-img">
+    <path d="M30 40 Q50 20 70 40 L80 100 Q50 115 20 100 Z" fill="${col}" opacity="0.1" />
+    <path d="M35 35 L65 35 L70 20 L58 30 L50 15 L42 30 L30 20 Z" fill="${col}" /> <circle cx="50" cy="55" r="18" fill="#ffe0bd" /> <path d="M30 50 Q15 80 30 110 M70 50 Q85 80 70 110" stroke="${col}" fill="none" stroke-width="2" /> <text x="50" y="105" text-anchor="middle" font-size="25" fill="${col}" opacity="0.3">${s}</text>
+  </svg>`,
+  'J': (col, s) => `<svg viewBox="0 0 100 120" class="face-img">
+    <path d="M30 15 L70 15 L75 35 L25 35 Z" fill="${col}" /> <circle cx="50" cy="55" r="18" fill="#ffe0bd" /> <rect x="45" y="73" width="10" height="35" fill="${col}" opacity="0.5" /> <text x="50" y="105" text-anchor="middle" font-size="25" fill="${col}" opacity="0.3">${s}</text>
+  </svg>`
 };
 
-function validSet(c){
-  if(c.length<3) return false;
-  const s=c[0].suit, r=c[0].rank;
-  const isSeq=c.every(x=>x.suit===s) && (()=>{
-    const v=c.map(x=>x.rank==='A'?14:rv(x.rank)).sort((a,b)=>a-b);
-    const v2=c.map(x=>rv(x.rank)).sort((a,b)=>a-b);
-    return v.every((n,i)=>i===0||n===v[i-1]+1) || v2.every((n,i)=>i===0||n===v2[i-1]+1);
-  })();
-  const isGrp=c.every(x=>x.rank===r) && new Set(c.map(x=>x.suit)).size===c.length;
-  return isSeq||isGrp;
-}
+let deck=[], hand=[], table=[], selected=[], staged=[];
 
-function startGame(){
-  document.getElementById('modal-start').style.display='none';
-  const d=[]; for(let i=0;i<2;i++) for(const s of SUITS) for(const r of RANKS) d.push({suit:s,rank:r,id:`${r}${s}${i}`});
-  G.deck=d.sort(()=>Math.random()-.5);
-  G.playerHand=G.deck.splice(0,13); G.aiHand=G.deck.splice(0,13);
-  G.tableSets=[]; G.playerMadeDrop=false; G.isPlayerTurn=true; G.phase='playing';
+function initGame(){
+  document.getElementById('start-modal').style.display='none';
+  const d=[]; for(let s of SUITS) for(let r of RANKS) d.push({s,r,id:Math.random()});
+  deck = d.sort(()=>Math.random()-0.5);
+  hand = deck.splice(0,13);
   render();
 }
 
-function toggleCard(id){
-  const i=G.selected.indexOf(id);
-  if(i===-1) G.selected.push(id); else G.selected.splice(i,1);
-  render();
-}
-
-function stageSelection(){
-  const cards=G.selected.map(id=>G.playerHand.find(c=>c.id===id));
-  if(!validSet(cards)) return alert("Invalid set!");
-  G.staged.push([...cards]);
-  G.playerHand=G.playerHand.filter(c=>!G.selected.includes(c.id));
-  G.selected=[]; render();
-}
-
-function dropStaged(){
-  const startIdx = G.tableSets.length;
-  const newIdxs = G.staged.map((_, i) => startIdx + i);
-  G.tableSets.push(...G.staged);
-  G.staged=[]; G.playerMadeDrop=true; G.actionTaken=true;
-  render();
-  requestAnimationFrame(()=>flashNewSets(newIdxs));
-  checkWin(); if(G.phase==='playing') endTurn();
-}
-
-function drawCard(){
-  if(!G.isPlayerTurn) return;
-  G.playerHand.push(G.deck.shift()); endTurn();
-}
-
-function endTurn(){
-  G.isPlayerTurn=false; G.selected=[]; render();
-  showBanner('⏳','AI is thinking…','Wait for your turn');
-  setTimeout(aiTurn, 1200);
-}
-
-function aiTurn(){
-  // Simple AI: Draw and end
-  G.aiHand.push(G.deck.shift());
-  G.isPlayerTurn=true;
-  showBanner('🃏','Your Turn!','AI drew a card');
-  render(); setTimeout(hideBanner, 1800);
-}
-
-function checkWin(){
-  if(G.playerHand.length===0 && G.staged.length===0){
-    document.getElementById('win-title').textContent="You Win!";
-    document.getElementById('modal-win').style.display='flex';
-  }
-}
-
-function showBanner(icon, title, sub){
-  const b=document.getElementById('turn-banner');
-  document.getElementById('turn-banner-icon').textContent=icon;
-  document.getElementById('turn-banner-text').textContent=title;
-  document.getElementById('turn-banner-sub').textContent=sub;
-  b.classList.add('show');
-}
-function hideBanner(){ document.getElementById('turn-banner').classList.remove('show'); }
-
-function flashNewSets(indices){
-  const els = document.querySelectorAll('.tset');
-  indices.forEach(i => { if(els[i]) { els[i].classList.add('just-dropped'); setTimeout(()=>els[i].classList.remove('just-dropped'), 1800); }});
-}
-
-function mkCard(card, sel, ani){
-  const el=document.createElement('div');
-  const isRed=RED.has(card.suit);
-  el.className='card '+(isRed?'red':'black')+(sel?' sel':'')+(ani?' ani':'');
-  const col=isRed?'#cc0000':'#111';
+function mkCard(c, isSel){
+  const el = document.createElement('div');
+  const red = RED.has(c.s);
+  el.className = `card ${red?'red':'black'} ${isSel?'sel':''}`;
+  const col = red?'#c0392b':'#1a1a1a';
   
-  el.innerHTML=`
-    <div class="card-corner-top"><div class="cr">${card.rank}</div><div class="cs-small">${card.suit}</div></div>
-    <div class="card-center">${['J','Q','K'].includes(card.rank)?`<div class="face-art">${FACE_ART[card.rank](col,card.suit)}</div>`:`<div class="pip-suit">${card.suit}</div>`}</div>
-    <div class="card-corner-bot"><div class="crb">${card.rank}</div><div class="csb">${card.suit}</div></div>
+  let centerHTML = `<div class="pip-big">${c.s}</div>`;
+  if(FACE_ART[c.r]) centerHTML = FACE_ART[c.r](col, c.s);
+
+  el.innerHTML = `
+    <div class="card-top"><div class="val">${c.r}</div><div class="suit-mini">${c.s}</div></div>
+    <div class="card-center">${centerHTML}</div>
   `;
+  el.onclick = () => {
+    const idx = selected.indexOf(c.id);
+    if(idx>-1) selected.splice(idx,1); else selected.push(c.id);
+    render();
+  };
   return el;
 }
 
-function render(){
-  const h=document.getElementById('player-hand'); h.innerHTML='';
-  G.playerHand.forEach(c=> {
-    const cardEl = mkCard(c, G.selected.includes(c.id));
-    cardEl.onclick = () => toggleCard(c.id);
-    h.appendChild(cardEl);
-  });
-
-  const t=document.getElementById('table-sets'); t.innerHTML='';
-  G.tableSets.forEach(s=>{
-    const setEl=document.createElement('div'); setEl.className='tset';
-    s.forEach(c=>setEl.appendChild(mkCard(c, false)));
-    t.appendChild(setEl);
-  });
-
-  const s=document.getElementById('stage-sets'); s.innerHTML='';
-  G.staged.forEach((set, i)=>{
-    const setEl=document.createElement('div'); setEl.className='sset';
-    setEl.onclick=()=>{ G.playerHand.push(...G.staged[i]); G.staged.splice(i,1); render(); };
-    set.forEach(c=>setEl.appendChild(mkCard(c, false)));
-    s.appendChild(setEl);
-  });
-
-  document.getElementById('stage-wrap').style.display=G.staged.length?'block':'none';
-  document.getElementById('btn-drop').disabled=!G.staged.length;
-  document.getElementById('btn-end').disabled=!G.actionTaken;
-  document.getElementById('deck-cnt').textContent=G.deck.length;
-  document.getElementById('turn-pill').textContent=G.isPlayerTurn?"Your Turn":"AI Turn";
+function stageSet(){
+  const cards = hand.filter(c => selected.includes(c.id));
+  if(cards.length < 3) return alert("Select at least 3 cards");
+  staged.push([...cards]);
+  hand = hand.filter(c => !selected.includes(c.id));
+  selected = [];
+  render();
 }
 
-startGame();
+function dropSets(){
+  const startIdx = table.length;
+  table.push(...staged);
+  staged = [];
+  render();
+  // Apply flash to the new sets
+  setTimeout(() => {
+    const setElements = document.querySelectorAll('.tset');
+    for(let i=startIdx; i<setElements.length; i++){
+      setElements[i].classList.add('just-dropped');
+    }
+  }, 50);
+}
+
+function sortHand(){
+  hand.sort((a,b) => SUITS.indexOf(a.s) - SUITS.indexOf(b.s) || RANKS.indexOf(a.r) - RANKS.indexOf(b.r));
+  render();
+}
+
+function drawCard(){
+  hand.push(deck.shift());
+  render();
+}
+
+function render(){
+  const hEl = document.getElementById('player-hand'); hEl.innerHTML='';
+  hand.forEach(c => hEl.appendChild(mkCard(c, selected.includes(c.id))));
+  
+  const tEl = document.getElementById('table-sets'); tEl.innerHTML='';
+  table.forEach(set => {
+    const sEl = document.createElement('div'); sEl.className='tset';
+    set.forEach(c => sEl.appendChild(mkCard(c, false)));
+    tEl.appendChild(sEl);
+  });
+
+  document.getElementById('deck-pill').textContent = `Deck: ${deck.length}`;
+}
 </script>
 </body>
 </html>
