@@ -7,9 +7,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --felt:#1a4a2e; --felt-dark:#0e2a1a;
+    --felt:#1a4a2e; --felt-dark:#0e2a1a; --felt-light:#235c39;
     --gold:#c9a84c; --gold-light:#e8c97a;
-    --cream:#f5f0e8; --red:#c0392b; --black:#1a1a1a;
+    --cream:#f5f0e8; --card-bg:#faf8f3;
+    --red:#c0392b; --black:#1a1a1a;
     --border:rgba(201,168,76,0.35);
     --blue:#3498db; --green:#2ecc71;
   }
@@ -19,202 +20,1113 @@
 
   /* ── HEADER ── */
   #header{display:flex;align-items:center;justify-content:space-between;padding:7px 18px;background:var(--felt-dark);border-bottom:1px solid var(--border);flex-shrink:0;}
-  #header h1{font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--gold);letter-spacing:.08em;}
+  #header h1{font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--gold);letter-spacing:.08em;text-shadow:0 0 20px rgba(201,168,76,.3);}
   .status-bar{display:flex;gap:10px;align-items:center;font-size:.68rem;}
   .pill{background:rgba(201,168,76,.1);border:1px solid var(--border);border-radius:20px;padding:3px 11px;}
+  #turn-pill{font-weight:500;color:var(--gold);}
+  .badge{display:none;border-radius:20px;padding:3px 10px;font-size:.62rem;letter-spacing:.06em;}
+  .badge.show{display:inline-block;}
+  #badge-locked{background:rgba(231,76,60,.13);border:1px solid rgba(231,76,60,.4);color:#e74c3c;}
+  #badge-rearrange{background:rgba(52,152,219,.13);border:1px solid rgba(52,152,219,.45);color:var(--blue);animation:blink 1.6s infinite;}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.5}}
 
-  /* ── GAME AREA ── */
+  /* ── LAYOUT ── */
   #game-area{display:flex;flex-direction:column;flex:1;overflow:hidden;}
-  #table-wrap{flex:1;overflow-y:auto;padding:12px 18px;background:var(--felt);margin:4px 10px;border-radius:10px;border:1px solid var(--border);}
-  #table-sets{display:flex;flex-wrap:wrap;gap:20px;align-content:flex-start;}
 
-  /* ── CARDS (ENHANCED LEGIBILITY) ── */
-  .card {
-    width:85px; height:120px; border-radius:8px;
-    background:#fff; border:1px solid #bbb;
-    box-shadow:0 3px 10px rgba(0,0,0,0.3);
-    display:flex; flex-direction:column;
-    padding:5px; cursor:pointer;
-    transition:transform .15s, box-shadow .15s;
-    position:relative; flex-shrink:0;
+  /* ── AI HAND ── */
+  #ai-row{padding:6px 18px;flex-shrink:0;display:flex;align-items:center;gap:10px;}
+  .plabel{font-size:.62rem;color:var(--gold);letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;min-width:55px;}
+  #ai-hand{display:flex;flex-wrap:nowrap;overflow:hidden;} #ai-hand .cb{margin-right:-14px;} #ai-hand .cb:last-child{margin-right:0;}
+  .cb{width:40px;height:56px;border-radius:4px;background:linear-gradient(135deg,#1e3a6e,#2d5499);border:1px solid rgba(255,255,255,.18);box-shadow:1px 1px 4px rgba(0,0,0,.4);position:relative;overflow:hidden;flex-shrink:0;}
+  .cb::after{content:'';position:absolute;inset:3px;border:1px solid rgba(255,255,255,.12);border-radius:2px;background:repeating-linear-gradient(45deg,transparent,transparent 3px,rgba(255,255,255,.04) 3px,rgba(255,255,255,.04) 6px);}
+
+  /* ── TABLE ── */
+  #table-wrap{flex:1;overflow-y:auto;overflow-x:hidden;padding:8px 18px;background:var(--felt);margin:4px 10px;border-radius:10px;border:1px solid var(--border);transition:border-color .3s,box-shadow .3s;}
+  #table-wrap.rmode{border-color:rgba(52,152,219,.6);box-shadow:0 0 18px rgba(52,152,219,.18);}
+  #table-wrap::-webkit-scrollbar{width:3px;}
+  #table-wrap::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+  #tbl-hdr{font-size:.58rem;color:rgba(201,168,76,.45);letter-spacing:.16em;text-transform:uppercase;margin-bottom:7px;text-align:center;transition:color .3s;}
+  #tbl-hdr.rmode{color:rgba(52,152,219,.75);}
+  #table-sets{display:flex;flex-wrap:wrap;gap:14px;min-height:90px;align-content:flex-start;}
+
+  /* .tset styles now inside CARDS section */
+
+  /* ── DECK ── */
+  #deck-row{display:flex;align-items:center;justify-content:center;gap:18px;padding:5px 18px;flex-shrink:0;}
+  .dstack{width:48px;height:66px;position:relative;cursor:pointer;}
+  .dstack::before,.dstack::after{content:'';position:absolute;width:48px;height:66px;border-radius:5px;background:linear-gradient(135deg,#1e3a6e,#2d5499);border:1px solid rgba(255,255,255,.13);}
+  .dstack::before{top:-3px;left:-2px;} .dstack::after{top:-1px;left:-1px;}
+  .dtop{position:relative;width:48px;height:66px;border-radius:5px;background:linear-gradient(135deg,#1e3a6e,#2d5499);border:1px solid rgba(255,255,255,.18);z-index:1;transition:transform .15s;box-shadow:2px 2px 8px rgba(0,0,0,.5);}
+  .dtop:hover{transform:translateY(-3px);}
+  .dcnt{font-size:.6rem;color:rgba(255,255,255,.45);text-align:center;position:absolute;bottom:-18px;width:100%;}
+
+  /* ── STAGE ── */
+  #stage-wrap{display:none;padding:3px 18px;flex-shrink:0;}
+  #stage-wrap.show{display:block;}
+  #stage-lbl{font-size:.58rem;color:rgba(201,168,76,.55);letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px;}
+  #stage-sets{display:flex;flex-wrap:wrap;gap:7px;min-height:82px;background:rgba(0,0,0,.13);border:1px dashed rgba(201,168,76,.22);border-radius:6px;padding:5px 7px;}
+  /* .sset styles now inside CARDS section */
+
+  /* ── PLAYER HAND ── */
+  #hand-section{padding:2px 18px 8px;flex-shrink:0;overflow:visible;}
+  #hand-lbl{font-size:.58rem;color:var(--gold);letter-spacing:.1em;text-transform:uppercase;margin-bottom:5px;display:flex;justify-content:space-between;align-items:center;}
+  /* player-hand now defined in CARDS section */
+
+  /* ── CARDS ── */
+  .card{
+    width:80px;height:112px;border-radius:8px;
+    background:#fff;border:1.5px solid #ccc;
+    box-shadow:0 3px 10px rgba(0,0,0,.28);
+    display:flex;flex-direction:column;
+    padding:4px 5px 4px 5px;
+    cursor:pointer;
+    transition:transform .13s,box-shadow .13s,z-index 0s;
+    flex-shrink:0;position:relative;overflow:hidden;
   }
-  .card.red .val, .card.red .suit-mini { color:var(--red); }
-  .card.black .val, .card.black .suit-mini { color:var(--black); }
+  .card:hover{transform:translateY(-14px)!important;box-shadow:0 10px 24px rgba(0,0,0,.38);z-index:200!important;}
+  .card.sel{transform:translateY(-20px)!important;border-color:var(--gold);box-shadow:0 0 0 2.5px var(--gold),0 10px 22px rgba(0,0,0,.35);z-index:201!important;}
+  .card.pu{border-color:var(--blue);box-shadow:0 0 0 2.5px var(--blue),0 8px 18px rgba(0,0,0,.3);transform:translateY(-10px)!important;z-index:200!important;}
+  .card.poach-candidate{border-color:var(--green);box-shadow:0 0 0 2px var(--green);}
+  .card.red .cr,.card.red .cs-small,.card.red .crb,.card.red .csb,.card.red .face-suit{color:#cc0000;}
+  .card.black .cr,.card.black .cs-small,.card.black .crb,.card.black .csb,.card.black .face-suit{color:#111;}
 
-  /* Big legible numbers */
-  .card-top { display:flex; flex-direction:column; line-height:0.9; }
-  .val { font-size:1.6rem; font-weight:900; font-family:'Playfair Display',serif; }
-  .suit-mini { font-size:1rem; }
+  /* corner labels */
+  .card-corner-top{display:flex;flex-direction:column;align-items:flex-start;line-height:1;flex-shrink:0;}
+  .cr{font-size:1.35rem;font-weight:900;font-family:'Playfair Display',serif;line-height:1;}
+  .cs-small{font-size:1rem;line-height:1;}
+  .card-corner-bot{display:flex;flex-direction:column;align-items:flex-end;line-height:1;transform:rotate(180deg);flex-shrink:0;}
+  .crb{font-size:1.35rem;font-weight:900;font-family:'Playfair Display',serif;line-height:1;}
+  .csb{font-size:1rem;line-height:1;}
 
-  /* Center Art */
-  .card-center { flex:1; display:flex; align-items:center; justify-content:center; overflow:hidden; }
-  .face-img { width:100%; height:100%; }
-  .pip-big { font-size:2.5rem; }
+  /* centre area */
+  .card-center{flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+  /* pip suits for number cards */
+  .pip-suit{font-size:1.9rem;line-height:1;}
+  /* face card SVG artwork */
+  .face-art{width:100%;height:100%;display:flex;align-items:center;justify-content:center;position:relative;}
+  .face-art svg{width:52px;height:62px;}
 
-  /* ── OVERLAP SYSTEM ── */
-  #player-hand {
-    display:flex; padding:20px 40px; 
-    min-height:140px; align-items:flex-end;
+  .card.hc{cursor:grab;}.card.hc:active{cursor:grabbing;}
+  .card.dragging{opacity:.15;transform:none!important;box-shadow:none!important;pointer-events:none;}
+
+  /* ── OVERLAPPING HAND ── */
+  #player-hand{
+    display:flex;flex-wrap:nowrap;
+    gap:0;
+    min-height:115px;
+    align-items:flex-end;
+    position:relative;
     overflow-x:auto;
+    overflow-y:visible;
+    padding:18px 6px 4px 6px;
   }
-  #player-hand .card { margin-right:-45px; } /* Tight overlap */
-  #player-hand .card:hover { transform:translateY(-20px); z-index:100; margin-right:-45px; }
-  #player-hand .card.sel { transform:translateY(-30px); border:3px solid var(--gold); z-index:101; }
+  #player-hand .card{margin-right:-28px;}
+  #player-hand .card:last-child{margin-right:0;}
+  #player-hand .card:hover,#player-hand .card.sel{margin-right:-28px;}
 
-  .tset { display:flex; background:rgba(0,0,0,0.1); padding:8px; border-radius:8px; }
-  .tset .card { width:65px; height:90px; margin-right:-35px; }
-  .tset .card .val { font-size:1.2rem; }
-  .tset .card:last-child { margin-right:0; }
-
-  /* ── FLASH ANIMATION ── */
-  @keyframes highlightDrop {
-    0% { outline: 0px solid var(--green); box-shadow: 0 0 0px var(--green); }
-    50% { outline: 4px solid var(--green); box-shadow: 0 0 25px var(--green); }
-    100% { outline: 0px solid transparent; }
+  /* ── OVERLAPPING TABLE SETS ── */
+  .tset{
+    display:flex;flex-wrap:nowrap;
+    background:rgba(0,0,0,.18);
+    border:1px solid rgba(201,168,76,.18);
+    border-radius:6px;
+    padding:5px 7px 5px 7px;
+    transition:border-color .2s,box-shadow .2s;
+    cursor:default;
+    position:relative;
+    align-items:flex-end;
+    min-height:70px;
   }
-  .just-dropped { animation: highlightDrop 1.5s ease-out; z-index: 50; }
+  .tset .card{margin-right:-22px;width:62px;height:86px;}
+  .tset .card:last-child{margin-right:0;}
+  .tset .card .cr,.tset .card .crb{font-size:1.1rem;}
+  .tset .card .cs-small,.tset .card .csb{font-size:.82rem;}
+  .tset .card:hover{transform:translateY(-10px)!important;}
 
-  /* ── UI BUTTONS ── */
-  #action-bar{display:flex;gap:10px;justify-content:center;padding:15px;background:var(--felt-dark);}
-  .btn{padding:10px 20px; border-radius:5px; border:none; font-weight:bold; cursor:pointer; text-transform:uppercase; font-size:0.7rem;}
-  .btn-gold{background:var(--gold); color:white;}
-  .btn-blue{background:var(--blue); color:white;}
+  .tset.hl{border-color:var(--gold);box-shadow:0 0 9px rgba(201,168,76,.35);}
+  .tset.rv{border-color:var(--green);box-shadow:0 0 7px rgba(46,204,113,.25);}
+  .tset.ri{border-color:#e74c3c;box-shadow:0 0 7px rgba(231,76,60,.3);}
+  .tset.dt{border-color:var(--blue);box-shadow:0 0 10px rgba(52,152,219,.35);cursor:pointer;}
 
-  /* Overlay and Modals */
-  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center;z-index:200;}
-  .modal{background:var(--felt-dark); padding:30px; border-radius:15px; border:1px solid var(--gold); text-align:center;}
+  /* ── OVERLAPPING STAGE ── */
+  .sset{
+    display:flex;flex-wrap:nowrap;
+    background:rgba(201,168,76,.05);
+    border:1px solid rgba(201,168,76,.18);
+    border-radius:4px;
+    padding:4px 5px;
+    cursor:pointer;
+    transition:border-color .2s;
+    align-items:flex-end;
+    min-height:56px;
+  }
+  .sset .card{margin-right:-22px;width:54px;height:76px;}
+  .sset .card:last-child{margin-right:0;}
+  .sset .card .cr,.sset .card .crb{font-size:1rem;}
+  .sset .card .cs-small,.sset .card .csb{font-size:.78rem;}
+  .sset:hover{border-color:rgba(201,168,76,.45);}
+  .sset.ok{border-color:var(--green);}
+  .sset.bad{border-color:#e74c3c;}
+
+  #drag-ghost{position:fixed;pointer-events:none;z-index:9999;transform:rotate(4deg) scale(1.07);box-shadow:4px 12px 28px rgba(0,0,0,.58);transition:none;border-color:var(--gold)!important;}
+  .drop-ind{width:3px;min-height:112px;border-radius:3px;background:var(--gold);box-shadow:0 0 7px rgba(201,168,76,.6);flex-shrink:0;align-self:center;z-index:300;}
+
+  /* ── ACTION BAR ── */
+  #action-bar{display:flex;gap:7px;justify-content:center;padding:5px 18px 9px;flex-shrink:0;flex-wrap:wrap;}
+  .btn{font-family:'DM Mono',monospace;font-size:.67rem;letter-spacing:.07em;padding:7px 13px;border-radius:5px;cursor:pointer;border:1px solid;transition:all .13s;text-transform:uppercase;}
+  .btn-gold{background:var(--gold);color:var(--felt-dark);border-color:var(--gold);font-weight:600;}
+  .btn-gold:hover{background:var(--gold-light);}
+  .btn-gold:disabled{opacity:.28;cursor:not-allowed;}
+  .btn-out{background:transparent;color:var(--gold);border-color:var(--border);}
+  .btn-out:hover{border-color:var(--gold);background:rgba(201,168,76,.09);}
+  .btn-out:disabled{opacity:.28;cursor:not-allowed;}
+  .btn-red{background:transparent;color:#e74c3c;border-color:rgba(231,76,60,.38);}
+  .btn-red:hover{background:rgba(231,76,60,.09);}
+  .btn-red:disabled{opacity:.28;cursor:not-allowed;}
+  .btn-blue{background:transparent;color:var(--blue);border-color:rgba(52,152,219,.38);}
+  .btn-blue:hover{background:rgba(52,152,219,.09);border-color:var(--blue);}
+  .btn-blue:disabled{opacity:.28;cursor:not-allowed;}
+
+  /* ── MODALS ── */
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.78);display:flex;align-items:center;justify-content:center;z-index:100;backdrop-filter:blur(5px);}
+  .modal{background:var(--felt-dark);border:1px solid var(--border);border-radius:14px;padding:30px;max-width:460px;width:92%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.7);}
+  .modal h2{font-family:'Playfair Display',serif;font-size:1.9rem;color:var(--gold);margin-bottom:11px;}
+  .modal p{font-size:.76rem;color:rgba(245,240,232,.7);line-height:1.85;margin-bottom:18px;}
+  .modal table{width:100%;border-collapse:collapse;font-size:.7rem;margin-bottom:16px;}
+  .modal table th{color:var(--gold);padding:4px 8px;border-bottom:1px solid var(--border);text-align:left;}
+  .modal table td{padding:4px 8px;color:rgba(245,240,232,.75);border-bottom:1px solid rgba(201,168,76,.1);}
+
+  /* ── MISC ── */
+  @keyframes pfx{0%,100%{background:var(--felt)}50%{background:rgba(231,76,60,.28)}}
+  #table-wrap.pf{animation:pfx .5s ease 3;}
+  @keyframes di{from{transform:translateY(-18px) scale(.85);opacity:0}to{transform:translateY(0) scale(1);opacity:1}}
+  .ani{animation:di .18s ease forwards;}
+  #no-sets-msg{color:rgba(201,168,76,.22);font-size:.68rem;padding:18px;width:100%;text-align:center;}
+  .new-set-btn{align-self:center;padding:4px 11px;font-size:.62rem;}
+
+  /* ── TURN-END BANNER ── */
+  #turn-banner{
+    position:fixed;top:0;left:0;right:0;
+    display:flex;align-items:center;justify-content:center;
+    pointer-events:none;z-index:500;
+    transform:translateY(-100%);
+    transition:transform .3s cubic-bezier(.34,1.56,.64,1);
+  }
+  #turn-banner.show{transform:translateY(0);}
+  #turn-banner.hide{transform:translateY(-110%);transition:transform .4s ease-in;}
+  #turn-banner-inner{
+    background:rgba(10,30,18,.92);
+    border:1px solid var(--border);
+    border-top:none;
+    border-radius:0 0 12px 12px;
+    padding:10px 28px;
+    display:flex;align-items:center;gap:10px;
+    box-shadow:0 6px 24px rgba(0,0,0,.5);
+    backdrop-filter:blur(6px);
+  }
+  #turn-banner-icon{font-size:1.3rem;}
+  #turn-banner-text{font-family:'Playfair Display',serif;font-size:1rem;color:var(--gold);letter-spacing:.04em;}
+  #turn-banner-sub{font-size:.6rem;color:rgba(245,240,232,.45);margin-top:1px;}
+
+  /* ── NEW-SET FLASH ── */
+  @keyframes setDrop{
+    0%  {border-color:var(--green);box-shadow:0 0 0 0 rgba(46,204,113,.8),0 0 24px rgba(46,204,113,.5);}
+    40% {border-color:var(--green);box-shadow:0 0 0 8px rgba(46,204,113,0),0 0 32px rgba(46,204,113,.6);}
+    70% {border-color:var(--gold);box-shadow:0 0 0 0 rgba(201,168,76,0),0 0 16px rgba(201,168,76,.4);}
+    100%{border-color:rgba(201,168,76,.18);box-shadow:none;}
+  }
+  .tset.just-dropped{animation:setDrop 1.8s ease forwards;}
 </style>
 </head>
 <body>
+<!-- TURN-END BANNER -->
+<div id="turn-banner">
+  <div id="turn-banner-inner">
+    <div id="turn-banner-icon">⏳</div>
+    <div>
+      <div id="turn-banner-text">AI is thinking…</div>
+      <div id="turn-banner-sub">Please wait</div>
+    </div>
+  </div>
+</div>
 
 <div id="app">
+
+  <!-- HEADER -->
   <div id="header">
     <h1>KonKan</h1>
     <div class="status-bar">
+      <span id="badge-locked" class="badge">INITIAL DROP REQUIRED</span>
+      <span id="badge-rearrange" class="badge">REARRANGE MODE</span>
       <span class="pill" id="turn-pill">Your Turn</span>
       <span class="pill" id="deck-pill">Deck: 78</span>
     </div>
   </div>
 
   <div id="game-area">
+
+    <!-- AI HAND -->
+    <div id="ai-row">
+      <div class="plabel">AI ♠</div>
+      <div id="ai-hand"></div>
+      <div id="ai-cnt" style="font-size:.62rem;color:rgba(201,168,76,.55);margin-left:6px;"></div>
+    </div>
+
+    <!-- TABLE -->
     <div id="table-wrap">
+      <div id="tbl-hdr">— TABLE —</div>
       <div id="table-sets"></div>
     </div>
 
-    <div id="player-hand"></div>
-
-    <div id="action-bar">
-      <button class="btn btn-blue" onclick="sortHand()">Sort Hand</button>
-      <button class="btn btn-gold" id="btn-stage" onclick="stageSet()">Stage Set</button>
-      <button class="btn btn-gold" id="btn-drop" onclick="dropSets()" style="background:var(--green)">Drop All</button>
-      <button class="btn btn-blue" onclick="drawCard()">Draw & End</button>
+    <!-- DECK -->
+    <div id="deck-row">
+      <div style="position:relative;">
+        <div class="dstack" id="deck-btn" onclick="drawCard()"><div class="dtop"></div></div>
+        <div class="dcnt" id="deck-cnt">78</div>
+      </div>
+      <div style="font-size:.62rem;color:rgba(201,168,76,.45);">Draw a card to end your turn</div>
     </div>
+
+    <!-- STAGE AREA -->
+    <div id="stage-wrap">
+      <div id="stage-lbl">Staged Sets — click a set to return it to hand</div>
+      <div id="stage-sets"></div>
+    </div>
+
+    <!-- PLAYER HAND -->
+    <div id="hand-section">
+      <div id="hand-lbl">
+        <span>Your Hand <span style="color:rgba(201,168,76,.35);font-size:.52rem;">— drag to reorder</span></span>
+        <span style="display:flex;gap:7px;align-items:center;">
+          <button class="btn btn-out" style="padding:2px 9px;font-size:.58rem;" onclick="sortHand()">Sort</button>
+          <span id="hand-cnt" style="color:rgba(201,168,76,.55);">13 cards</span>
+        </span>
+      </div>
+      <div id="player-hand"></div>
+    </div>
+
+    <!-- ACTION BAR -->
+    <div id="action-bar">
+      <button class="btn btn-out"  id="btn-clear"    onclick="clearSel()">Clear</button>
+      <button class="btn btn-out"  id="btn-stage"    onclick="stageSelection()">Stage Set</button>
+      <button class="btn btn-gold" id="btn-drop"     onclick="dropStaged()" disabled>Drop All</button>
+      <button class="btn btn-blue" id="btn-rearrange" onclick="toggleRearrange()">Rearrange</button>
+      <button class="btn btn-red"  id="btn-end"      onclick="endTurnAction()" disabled>End Turn</button>
+    </div>
+
   </div>
 </div>
 
-<div class="overlay" id="start-modal">
+<!-- START MODAL -->
+<div class="overlay" id="modal-start">
   <div class="modal">
-    <h2 style="color:var(--gold); margin-bottom:15px;">Detailed Face Cards Update</h2>
-    <p style="margin-bottom:20px;">I've updated the King, Queen, and Jack with high-detail portraits.</p>
-    <button class="btn btn-gold" onclick="initGame()">Start Game</button>
+    <h2>KonKan</h2>
+    <p>Be the first player to empty your hand. Two decks, 13 cards each.</p>
+    <table>
+      <tr><th>Valid Sets</th><th>Rule</th></tr>
+      <tr><td>Run / Sequence</td><td>Same suit, consecutive (Q-K-A valid)</td></tr>
+      <tr><td>Group</td><td>Same rank, all different suits</td></tr>
+    </table>
+    <p style="margin-bottom:8px;"><strong>How to play:</strong> Select 3+ cards → <em>Stage Set</em> → <em>Drop All</em> to play them to the table. Drawing a card ends your turn immediately.</p>
+    <p style="margin-bottom:8px;"><strong>Initial drop:</strong> You must drop at least one set from your hand before you can interact with the table.</p>
+    <p style="margin-bottom:18px;"><strong>Table interaction</strong> (after initial drop): Click a table set to highlight it, then click a hand card to add it — the source set must keep 3+ cards. Use <em>Rearrange</em> to freely move cards between table sets.</p>
+    <button class="btn btn-gold" style="width:100%;padding:11px;" onclick="startGame()">Deal Cards</button>
+  </div>
+</div>
+
+<!-- WIN MODAL -->
+<div class="overlay" id="modal-win" style="display:none;">
+  <div class="modal">
+    <h2 id="win-title"></h2>
+    <p id="win-msg"></p>
+    <button class="btn btn-gold" style="width:100%;padding:11px;" onclick="restartGame()">Play Again</button>
   </div>
 </div>
 
 <script>
-const SUITS=['♠','♥','♦','♣'], RANKS=['A','2','3','4','5','6','7','8','9','10','J','Q','K'], RED=new Set(['♥','♦']);
+// ═══════════════════════════════════════════
+//  CONSTANTS
+// ═══════════════════════════════════════════
+const SUITS  = ['♠','♥','♦','♣'];
+const RANKS  = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+const RED    = new Set(['♥','♦']);
 
-// HIGH DETAIL SVG PORTRAITS
-const FACE_ART = {
-  'K': (col, s) => `<svg viewBox="0 0 100 120" class="face-img">
-    <rect x="20" y="40" width="60" height="70" fill="${col}" opacity="0.1" />
-    <path d="M25 40 L75 40 L85 10 L65 30 L50 5 L35 30 L15 10 Z" fill="${col}" /> <circle cx="50" cy="55" r="18" fill="#ffe0bd" /> <path d="M35 65 Q50 85 65 65" fill="none" stroke="${col}" stroke-width="3" /> <text x="50" y="105" text-anchor="middle" font-size="25" fill="${col}" opacity="0.3">${s}</text>
-  </svg>`,
-  'Q': (col, s) => `<svg viewBox="0 0 100 120" class="face-img">
-    <path d="M30 40 Q50 20 70 40 L80 100 Q50 115 20 100 Z" fill="${col}" opacity="0.1" />
-    <path d="M35 35 L65 35 L70 20 L58 30 L50 15 L42 30 L30 20 Z" fill="${col}" /> <circle cx="50" cy="55" r="18" fill="#ffe0bd" /> <path d="M30 50 Q15 80 30 110 M70 50 Q85 80 70 110" stroke="${col}" fill="none" stroke-width="2" /> <text x="50" y="105" text-anchor="middle" font-size="25" fill="${col}" opacity="0.3">${s}</text>
-  </svg>`,
-  'J': (col, s) => `<svg viewBox="0 0 100 120" class="face-img">
-    <path d="M30 15 L70 15 L75 35 L25 35 Z" fill="${col}" /> <circle cx="50" cy="55" r="18" fill="#ffe0bd" /> <rect x="45" y="73" width="10" height="35" fill="${col}" opacity="0.5" /> <text x="50" y="105" text-anchor="middle" font-size="25" fill="${col}" opacity="0.3">${s}</text>
-  </svg>`
+function rv(r){ return RANKS.indexOf(r)+1; }   // rank → 1-13; A=1, K=13
+
+// ═══════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════
+let G = {
+  deck:[], playerHand:[], aiHand:[],
+  tableSets:[],          // live table
+  snap:null,             // snapshot for rearrange undo
+  selected:[],           // hand card ids selected
+  staged:[],             // arrays of cards staged to drop
+  hlSet:null,            // highlighted table-set index (for add / poach)
+  picked:null,           // {si,ci,card} — rearrange picked card
+  playerMadeDrop:false,  // has player completed their initial drop?
+  aiMadeDrop:false,
+  rearrange:false,
+  isPlayerTurn:true,
+  actionTaken:false,     // did player play something this turn? (enables End Turn)
+  phase:'start'
 };
 
-let deck=[], hand=[], table=[], selected=[], staged=[];
+// ═══════════════════════════════════════════
+//  DECK
+// ═══════════════════════════════════════════
+function createDeck(){
+  const d=[];
+  for(let i=0;i<2;i++) for(const s of SUITS) for(const r of RANKS) d.push({suit:s,rank:r,id:`${r}${s}${i}`});
+  return shuffle(d);
+}
+function shuffle(a){
+  for(let i=a.length-1;i>0;i--){const j=0|Math.random()*(i+1);[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
 
-function initGame(){
-  document.getElementById('start-modal').style.display='none';
-  const d=[]; for(let s of SUITS) for(let r of RANKS) d.push({s,r,id:Math.random()});
-  deck = d.sort(()=>Math.random()-0.5);
-  hand = deck.splice(0,13);
+// ═══════════════════════════════════════════
+//  VALIDATION
+// ═══════════════════════════════════════════
+function isSeq(cards){
+  if(cards.length<3) return false;
+  const s=cards[0].suit;
+  if(!cards.every(c=>c.suit===s)) return false;
+  const vs=cards.map(c=>rv(c.rank)).sort((a,b)=>a-b);
+  // Check consecutive — also allow wrap K(13)-A(1) treated as 14 for high-ace
+  for(let i=1;i<vs.length;i++) if(vs[i]!==vs[i-1]+1) return false;
+  return true;
+}
+
+function isSeqHighAce(cards){
+  // Normal run check
+  if(isSeq(cards)) return true;
+  // High-ace: treat A as 14, check if Q-K-A (or longer) works
+  if(!cards.every(c=>c.suit===cards[0].suit)) return false;
+  const vs=cards.map(c=>c.rank==='A'?14:rv(c.rank)).sort((a,b)=>a-b);
+  for(let i=1;i<vs.length;i++) if(vs[i]!==vs[i-1]+1) return false;
+  return true;
+}
+
+function isGrp(cards){
+  if(cards.length<3) return false;
+  const r=cards[0].rank;
+  if(!cards.every(c=>c.rank===r)) return false;
+  const suits=cards.map(c=>c.suit);
+  return new Set(suits).size===suits.length;
+}
+
+function validSet(cards){ return isSeqHighAce(cards)||isGrp(cards); }
+function tableOK(){ return G.tableSets.every(s=>s.length>=3&&validSet(s)); }
+
+// ═══════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════
+function startGame(){
+  document.getElementById('modal-start').style.display='none';
+  G.deck=createDeck();
+  G.playerHand=G.deck.splice(0,13);
+  G.aiHand=G.deck.splice(0,13);
+  G.tableSets=[];G.snap=null;
+  G.selected=[];G.staged=[];
+  G.hlSet=null;G.picked=null;
+  G.playerMadeDrop=false;G.aiMadeDrop=false;
+  G.rearrange=false;G.isPlayerTurn=true;G.actionTaken=false;
+  G.phase='playing';
+  render();
+}
+function restartGame(){ document.getElementById('modal-win').style.display='none'; startGame(); }
+
+// ═══════════════════════════════════════════
+//  PLAYER ACTIONS
+// ═══════════════════════════════════════════
+
+/* Toggle a card in player hand selected */
+function toggleCard(id){
+  if(!G.isPlayerTurn||G.rearrange) return;
+  // If a table set is highlighted, clicking a card tries to add-or-poach
+  if(G.hlSet!==null){
+    const card=G.playerHand.find(c=>c.id===id);
+    if(card){ tryAddOrPoach(card,G.hlSet); return; }
+  }
+  const i=G.selected.indexOf(id);
+  if(i===-1) G.selected.push(id); else G.selected.splice(i,1);
   render();
 }
 
-function mkCard(c, isSel){
-  const el = document.createElement('div');
-  const red = RED.has(c.s);
-  el.className = `card ${red?'red':'black'} ${isSel?'sel':''}`;
-  const col = red?'#c0392b':'#1a1a1a';
-  
-  let centerHTML = `<div class="pip-big">${c.s}</div>`;
-  if(FACE_ART[c.r]) centerHTML = FACE_ART[c.r](col, c.s);
-
-  el.innerHTML = `
-    <div class="card-top"><div class="val">${c.r}</div><div class="suit-mini">${c.s}</div></div>
-    <div class="card-center">${centerHTML}</div>
-  `;
-  el.onclick = () => {
-    const idx = selected.indexOf(c.id);
-    if(idx>-1) selected.splice(idx,1); else selected.push(c.id);
-    render();
-  };
-  return el;
-}
-
-function stageSet(){
-  const cards = hand.filter(c => selected.includes(c.id));
-  if(cards.length < 3) return alert("Select at least 3 cards");
-  staged.push([...cards]);
-  hand = hand.filter(c => !selected.includes(c.id));
-  selected = [];
-  render();
-}
-
-function dropSets(){
-  const startIdx = table.length;
-  table.push(...staged);
-  staged = [];
-  render();
-  // Apply flash to the new sets
-  setTimeout(() => {
-    const setElements = document.querySelectorAll('.tset');
-    for(let i=startIdx; i<setElements.length; i++){
-      setElements[i].classList.add('just-dropped');
+/* Try to add a hand card to a highlighted table set */
+function tryAddOrPoach(card,si){
+  if(!G.playerMadeDrop) return; // must have made initial drop
+  const set=G.tableSets[si];
+  const tests=[[...set,card],[card,...set]];
+  for(const t of tests){
+    if(validSet(t)){
+      if(isSeqHighAce(t)) sortSeq(t);
+      G.tableSets[si]=t;
+      G.playerHand=G.playerHand.filter(c=>c.id!==card.id);
+      G.selected=[];G.hlSet=null;G.actionTaken=true;
+      render();
+      requestAnimationFrame(()=>flashNewSets([si]));
+      checkWin();
+      if(G.phase==='playing') endPlayerTurn();
+      return;
     }
-  }, 50);
+  }
+  // Doesn't fit — just select it
+  const i=G.selected.indexOf(card.id);
+  if(i===-1) G.selected.push(card.id); else G.selected.splice(i,1);
+  render();
+}
+
+/* Poach: take a card from a table set to use in staging — set must keep ≥3 */
+function poachCard(si,ci){
+  if(!G.isPlayerTurn||!G.playerMadeDrop||G.rearrange) return;
+  const set=G.tableSets[si];
+  if(set.length<=3){
+    flashSet(si,'ri'); return; // can't poach — would leave <3
+  }
+  const card=set[ci];
+  G.tableSets[si]=set.filter((_,k)=>k!==ci);
+  G.playerHand.push(card);
+  G.hlSet=null;
+  render();
+}
+
+/* Click on a table set (normal mode) */
+function clickSet(si){
+  if(!G.isPlayerTurn||G.rearrange) return;
+  if(!G.playerMadeDrop) return; // locked until initial drop
+
+  if(G.hlSet===si){ G.hlSet=null; render(); return; }
+  G.hlSet=si;
+  // If 1 card selected, try adding immediately
+  if(G.selected.length===1){
+    const card=G.playerHand.find(c=>c.id===G.selected[0]);
+    if(card){ tryAddOrPoach(card,si); return; }
+  }
+  render();
+}
+
+function clearSel(){
+  G.selected=[];G.hlSet=null;
+  render();
+}
+
+function stageSelection(){
+  if(G.selected.length<3) return;
+  const cards=G.selected.map(id=>G.playerHand.find(c=>c.id===id)).filter(Boolean);
+  if(!validSet(cards)){ toast('Not a valid set — need a run (same suit, consecutive) or group (same rank, different suits).'); return; }
+  if(isSeqHighAce(cards)) sortSeq(cards);
+  G.staged.push([...cards]);
+  G.playerHand=G.playerHand.filter(c=>!G.selected.includes(c.id));
+  G.selected=[];
+  render();
+}
+
+function dropStaged(){
+  if(G.staged.length===0) return;
+  const firstNewIdx=G.tableSets.length;
+  const newIndices=[];
+  for(let i=0;i<G.staged.length;i++){
+    G.tableSets.push([...G.staged[i]]);
+    newIndices.push(firstNewIdx+i);
+  }
+  G.staged=[];
+  G.playerMadeDrop=true;
+  G.rearrange=false; G.snap=null; G.picked=null;
+  G.actionTaken=true;
+  render();
+  // Flash the newly dropped sets after render
+  requestAnimationFrame(()=>flashNewSets(newIndices));
+  checkWin();
+  if(G.phase==='playing') endPlayerTurn();
 }
 
 function sortHand(){
-  hand.sort((a,b) => SUITS.indexOf(a.s) - SUITS.indexOf(b.s) || RANKS.indexOf(a.r) - RANKS.indexOf(b.r));
-  render();
+  G.playerHand.sort((a,b)=> SUITS.indexOf(a.suit)!==SUITS.indexOf(b.suit)
+    ? SUITS.indexOf(a.suit)-SUITS.indexOf(b.suit)
+    : rv(a.rank)-rv(b.rank));
+  renderHand(); renderStatus();
 }
 
+/* Draw a card — immediately ends turn */
 function drawCard(){
-  hand.push(deck.shift());
+  if(!G.isPlayerTurn||G.rearrange) return;
+  if(G.deck.length===0) return;
+  G.playerHand.push(G.deck.shift());
+  G.selected=[];
+  endPlayerTurn();
+}
+
+/* End Turn button — only active if player played something */
+function endTurnAction(){
+  if(!G.isPlayerTurn||!G.actionTaken) return;
+  if(G.rearrange){ commitRearrange(); return; }
+  endPlayerTurn();
+}
+
+// ═══════════════════════════════════════════
+//  REARRANGE MODE
+// ═══════════════════════════════════════════
+function toggleRearrange(){
+  if(!G.isPlayerTurn||!G.playerMadeDrop) return;
+  if(G.rearrange) commitRearrange(); else enterRearrange();
+}
+
+function enterRearrange(){
+  G.snap=G.tableSets.map(s=>[...s]);
+  G.rearrange=true; G.hlSet=null; G.selected=[]; G.picked=null;
   render();
 }
 
-function render(){
-  const hEl = document.getElementById('player-hand'); hEl.innerHTML='';
-  hand.forEach(c => hEl.appendChild(mkCard(c, selected.includes(c.id))));
-  
-  const tEl = document.getElementById('table-sets'); tEl.innerHTML='';
-  table.forEach(set => {
-    const sEl = document.createElement('div'); sEl.className='tset';
-    set.forEach(c => sEl.appendChild(mkCard(c, false)));
-    tEl.appendChild(sEl);
-  });
-
-  document.getElementById('deck-pill').textContent = `Deck: ${deck.length}`;
+function commitRearrange(){
+  if(!tableOK()){
+    toast('All table sets must have 3+ valid cards before committing.'); return;
+  }
+  G.snap=null; G.rearrange=false; G.picked=null;
+  render();
 }
+
+function cancelRearrange(){
+  if(G.snap){ G.tableSets=G.snap.map(s=>[...s]); G.snap=null; }
+  for(const s of G.staged) G.playerHand.push(...s);
+  G.staged=[];
+  G.rearrange=false; G.picked=null;
+  penaltyFlash();
+  for(let i=0;i<2&&G.deck.length>0;i++) G.playerHand.push(G.deck.shift());
+  render(); endPlayerTurn();
+}
+
+/* Pick a card in rearrange mode */
+function pickCard(si,ci){
+  if(!G.rearrange) return;
+  // Deselect if clicking same card again
+  if(G.picked&&G.picked.si===si&&G.picked.ci===ci){ G.picked=null; render(); return; }
+  // Block picking from a 3-card set — removing it would violate the rule
+  if(G.tableSets[si].length<=3){
+    // Flash the set red briefly to signal it's locked
+    const sets=document.getElementById('table-sets').children;
+    if(sets[si]){ sets[si].classList.add('ri'); setTimeout(()=>{ if(sets[si])sets[si].classList.remove('ri'); },700); }
+    return;
+  }
+  G.picked={si,ci,card:G.tableSets[si][ci]};
+  render();
+}
+
+/* Drop picked card into another set */
+function dropInto(ti){
+  if(!G.rearrange||!G.picked) return;
+  const {si,ci,card}=G.picked;
+  if(ti===si){ G.picked=null; render(); return; }
+  if(G.tableSets[si].length<=3){
+    alert('That set only has 3 cards — you cannot remove from it.');
+    return;
+  }
+  G.tableSets[si]=G.tableSets[si].filter((_,k)=>k!==ci);
+  const ti2=ti>si?ti-1:ti;
+  G.tableSets[ti2].push(card);
+  G.picked=null;
+  render();
+}
+
+function splitNew(){
+  if(!G.rearrange||!G.picked) return;
+  const {si,ci,card}=G.picked;
+  if(G.tableSets[si].length<=3){
+    alert('That set only has 3 cards — you cannot remove from it.');
+    return;
+  }
+  G.tableSets[si]=G.tableSets[si].filter((_,k)=>k!==ci);
+  G.tableSets.push([card]);
+  G.picked=null;
+  render();
+}
+
+// ═══════════════════════════════════════════
+//  WIN CHECK
+// ═══════════════════════════════════════════
+function checkWin(){
+  if(G.playerHand.length===0&&G.staged.length===0){
+    G.phase='gameover';
+    document.getElementById('win-title').textContent='🏆 You Win!';
+    document.getElementById('win-msg').textContent='You emptied your hand first. Excellent play!';
+    document.getElementById('modal-win').style.display='flex';
+  } else if(G.aiHand.length===0){
+    G.phase='gameover';
+    document.getElementById('win-title').textContent='😔 AI Wins';
+    document.getElementById('win-msg').textContent='The AI emptied its hand first. Better luck next time!';
+    document.getElementById('modal-win').style.display='flex';
+  }
+}
+
+// ═══════════════════════════════════════════
+//  TURN FLOW
+// ═══════════════════════════════════════════
+function endPlayerTurn(){
+  G.isPlayerTurn=false; G.selected=[]; G.hlSet=null; G.actionTaken=false;
+  showTurnBanner('⏳','AI is thinking…','Your turn ended');
+  render(); setTimeout(aiTurn,1100);
+}
+
+// ═══════════════════════════════════════════
+//  AI LOGIC
+// ═══════════════════════════════════════════
+function aiTurn(){
+  if(G.phase!=='playing') return;
+
+  let played=false;
+
+  // 1. Drop sets from hand
+  const drops=aiDropSets([...G.aiHand]);
+  let aiDropIndices=[];
+  if(drops.length>0){
+    const firstIdx=G.tableSets.length;
+    for(let di=0;di<drops.length;di++){
+      const s=drops[di];
+      G.tableSets.push(s);
+      for(const c of s) G.aiHand=G.aiHand.filter(x=>x.id!==c.id);
+      aiDropIndices.push(firstIdx+di);
+    }
+    G.aiMadeDrop=true; played=true;
+  }
+
+  // 2. Extend a table set with 1 hand card (only after initial AI drop)
+  if(!played&&G.aiMadeDrop){
+    outer: for(let i=0;i<G.tableSets.length;i++){
+      const set=G.tableSets[i];
+      for(const c of G.aiHand){
+        const tests=[[...set,c],[c,...set]];
+        for(const t of tests){
+          if(validSet(t)){
+            if(isSeqHighAce(t)) sortSeq(t);
+            G.tableSets[i]=t;
+            G.aiHand=G.aiHand.filter(x=>x.id!==c.id);
+            played=true; break outer;
+          }
+        }
+      }
+    }
+  }
+
+  if(!played&&G.deck.length>0) G.aiHand.push(G.deck.shift());
+
+  checkWin();
+  if(G.phase==='playing'){
+    G.isPlayerTurn=true;
+    showTurnBanner('🃏','Your Turn!', played?'AI played a set':'AI drew a card');
+    render();
+    if(aiDropIndices.length>0) requestAnimationFrame(()=>flashNewSets(aiDropIndices));
+    setTimeout(hideTurnBanner, 1800);
+  }
+}
+
+function aiDropSets(hand){
+  const found=[],used=new Set();
+  // Groups
+  const byR={};
+  for(const c of hand){if(!byR[c.rank])byR[c.rank]=[];byR[c.rank].push(c);}
+  for(const r in byR){
+    const g=byR[r]; if(g.length<3) continue;
+    const seen=new Set();
+    const uniq=g.filter(c=>{ if(seen.has(c.suit))return false; seen.add(c.suit); return true; });
+    if(uniq.length>=3){ const p=uniq.slice(0,4); found.push(p); p.forEach(c=>used.add(c.id)); }
+  }
+  // Sequences
+  const byS={};
+  for(const c of hand.filter(c=>!used.has(c.id))){if(!byS[c.suit])byS[c.suit]=[];byS[c.suit].push(c);}
+  for(const s in byS){
+    const cards=byS[s].sort((a,b)=>rv(a.rank)-rv(b.rank));
+    let i=0;
+    while(i<cards.length){
+      let seq=[cards[i]],j=i+1;
+      while(j<cards.length&&rv(cards[j].rank)===rv(seq[seq.length-1].rank)+1){seq.push(cards[j]);j++;}
+      if(seq.length>=3){found.push(seq);seq.forEach(c=>used.add(c.id));}
+      i=j;
+    }
+  }
+  return found;
+}
+
+// ═══════════════════════════════════════════
+//  RENDER
+// ═══════════════════════════════════════════
+function render(){ renderAI(); renderTable(); renderHand(); renderStage(); renderDeck(); renderStatus(); }
+
+function renderAI(){
+  const el=document.getElementById('ai-hand');
+  el.innerHTML='';
+  for(let i=0;i<G.aiHand.length;i++){ const d=document.createElement('div'); d.className='cb'; el.appendChild(d); }
+  document.getElementById('ai-cnt').textContent=`${G.aiHand.length} cards`;
+}
+
+function renderTable(){
+  const con=document.getElementById('table-sets');
+  const wrap=document.getElementById('table-wrap');
+  const hdr=document.getElementById('tbl-hdr');
+  con.innerHTML='';
+  wrap.classList.toggle('rmode',G.rearrange);
+  hdr.classList.toggle('rmode',G.rearrange);
+  if(G.rearrange){
+    hdr.textContent='— REARRANGE — pick a card to move, click a set to drop —';
+  } else if(!G.playerMadeDrop){
+    hdr.textContent='— TABLE — drop a set from your hand first —';
+  } else {
+    hdr.textContent='— TABLE — click a set, then a hand card to add or poach —';
+  }
+
+  if(G.tableSets.length===0){
+    con.innerHTML='<div id="no-sets-msg">No sets on table yet</div>'; return;
+  }
+
+  for(let i=0;i<G.tableSets.length;i++){
+    const set=G.tableSets[i];
+    const el=document.createElement('div');
+    const ok=set.length>=3&&validSet(set);
+    let cls='tset';
+    if(G.rearrange){
+      cls+=ok?' rv':' ri';
+      if(G.picked&&G.picked.si!==i) cls+=' dt';
+    } else {
+      if(G.hlSet===i) cls+=' hl';
+    }
+    el.className=cls;
+
+    if(!G.rearrange){
+      el.onclick=(e)=>{ if(e.target===el) clickSet(i); };
+      el.title=G.playerMadeDrop?'Click to select, then click a hand card to add':'Make your initial drop first';
+    } else if(G.picked&&G.picked.si!==i){
+      el.onclick=()=>dropInto(i);
+      el.title='Drop picked card here';
+    }
+
+    for(let j=0;j<set.length;j++){
+      const c=set[j];
+      const ce=mkCard(c,false,false);
+      if(G.rearrange){
+        const isP=G.picked&&G.picked.si===i&&G.picked.ci===j;
+        if(isP) ce.classList.add('pu');
+        const locked=set.length<=3;
+        ce.style.cursor=locked?'not-allowed':'pointer';
+        ce.title=locked?'Set has only 3 cards — cannot move':'Click to pick up and move';
+        if(locked) ce.style.opacity='0.7';
+        ce.onclick=(e)=>{ e.stopPropagation(); pickCard(i,j); };
+      } else if(G.playerMadeDrop){
+        // Right-click or long press to poach; normal click selects the set
+        ce.onclick=(e)=>{ e.stopPropagation(); clickSet(i); };
+        ce.oncontextmenu=(e)=>{ e.preventDefault(); poachCard(i,j); };
+        // Mark if poachable (set has >3)
+        if(set.length>3) ce.classList.add('poach-candidate');
+        ce.title=set.length>3?'Click: add hand card to set | Right-click: poach this card':'Click: add hand card to set';
+      } else {
+        ce.onclick=(e)=>{ e.stopPropagation(); };
+      }
+      el.appendChild(ce);
+    }
+    con.appendChild(el);
+  }
+
+  // Rearrange: show "+ New Set" when a card is picked
+  if(G.rearrange&&G.picked){
+    const btn=document.createElement('button');
+    btn.className='btn btn-blue new-set-btn';
+    btn.textContent='+ New Set';
+    btn.onclick=splitNew;
+    con.appendChild(btn);
+  }
+}
+
+function renderHand(){
+  const con=document.getElementById('player-hand');
+  con.innerHTML='';
+  for(const c of G.playerHand){
+    const sel=G.selected.includes(c.id);
+    const el=mkCard(c,true,sel);
+    el.classList.add('hc');
+    el.dataset.id=c.id;
+    el.onclick=(e)=>{ if(DR.moved)return; toggleCard(c.id); };
+    el.addEventListener('mousedown',drStart);
+    el.addEventListener('touchstart',drStart,{passive:false});
+    con.appendChild(el);
+  }
+  document.getElementById('hand-cnt').textContent=`${G.playerHand.length} cards`;
+}
+
+function renderStage(){
+  const wrap=document.getElementById('stage-wrap');
+  const con=document.getElementById('stage-sets');
+  if(G.staged.length===0){ wrap.classList.remove('show'); return; }
+  wrap.classList.add('show'); con.innerHTML='';
+  for(let i=0;i<G.staged.length;i++){
+    const el=document.createElement('div');
+    el.className='sset '+(validSet(G.staged[i])?'ok':'bad');
+    el.title='Click to return to hand';
+    el.onclick=()=>{ G.playerHand.push(...G.staged[i]); G.staged.splice(i,1); render(); };
+    for(const c of G.staged[i]) el.appendChild(mkCard(c,false,false,true));
+    con.appendChild(el);
+  }
+}
+
+function renderDeck(){
+  document.getElementById('deck-cnt').textContent=G.deck.length;
+  document.getElementById('deck-pill').textContent=`Deck: ${G.deck.length}`;
+}
+
+function renderStatus(){
+  const tp=document.getElementById('turn-pill');
+  const bl=document.getElementById('badge-locked');
+  const br=document.getElementById('badge-rearrange');
+  const bDrop=document.getElementById('btn-drop');
+  const bStage=document.getElementById('btn-stage');
+  const bRear=document.getElementById('btn-rearrange');
+  const bEnd=document.getElementById('btn-end');
+  const bClear=document.getElementById('btn-clear');
+
+  if(!G.isPlayerTurn){ tp.textContent='AI Turn'; tp.style.color='#e74c3c'; }
+  else{ tp.textContent='Your Turn'; tp.style.color='var(--gold)'; }
+
+  bl.classList.toggle('show',G.isPlayerTurn&&!G.playerMadeDrop&&G.tableSets.length===0&&G.staged.length===0);
+  br.classList.toggle('show',G.rearrange);
+
+  const can=G.isPlayerTurn;
+
+  if(G.rearrange){
+    bRear.textContent='Commit Rearrange';
+    bRear.className='btn btn-gold';
+    bEnd.textContent='Cancel (Draw 2)';
+    bEnd.disabled=false;
+    bDrop.disabled=G.staged.length===0;
+    bStage.disabled=G.selected.length<3;
+  } else {
+    bRear.textContent='Rearrange';
+    bRear.className='btn btn-blue';
+    bEnd.textContent='End Turn';
+    bEnd.disabled=!can||!G.actionTaken;
+    bDrop.disabled=G.staged.length===0||!can;
+    bStage.disabled=G.selected.length<3||!can;
+    bRear.disabled=!can||!G.playerMadeDrop||G.tableSets.length===0;
+  }
+
+  bClear.disabled=!can;
+  document.getElementById('deck-btn').style.opacity=can&&!G.rearrange?'1':'0.45';
+}
+
+// ── FACE CARD SVG ART ────────────────────────────────────────────────────────
+const FACE_ART = {
+  K: (col,suit) => `<svg viewBox="0 0 52 68" xmlns="http://www.w3.org/2000/svg">
+    <!-- Crown -->
+    <polygon points="6,28 14,14 26,22 38,14 46,28 40,30 26,24 12,30" fill="${col}" opacity=".9"/>
+    <circle cx="6" cy="28" r="3" fill="${col}"/>
+    <circle cx="26" cy="22" r="3" fill="${col}"/>
+    <circle cx="46" cy="28" r="3" fill="${col}"/>
+    <!-- Body -->
+    <rect x="14" y="30" width="24" height="28" rx="3" fill="${col}" opacity=".15"/>
+    <line x1="26" y1="30" x2="26" y2="58" stroke="${col}" stroke-width="2" opacity=".4"/>
+    <!-- Sword -->
+    <line x1="18" y1="36" x2="34" y2="52" stroke="${col}" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="16" y1="44" x2="36" y2="44" stroke="${col}" stroke-width="1.5" stroke-linecap="round" opacity=".6"/>
+    <!-- Face -->
+    <circle cx="26" cy="19" r="7" fill="#f5e6d0" stroke="${col}" stroke-width="1"/>
+    <circle cx="23" cy="17" r="1.2" fill="${col}"/>
+    <circle cx="29" cy="17" r="1.2" fill="${col}"/>
+    <path d="M23 21 Q26 23 29 21" stroke="${col}" stroke-width="1" fill="none"/>
+    <!-- Suit watermark -->
+    <text x="26" y="56" text-anchor="middle" font-size="11" fill="${col}" opacity=".25">${suit}</text>
+  </svg>`,
+
+  Q: (col,suit) => `<svg viewBox="0 0 52 68" xmlns="http://www.w3.org/2000/svg">
+    <!-- Hair / tiara -->
+    <ellipse cx="26" cy="13" rx="13" ry="5" fill="${col}" opacity=".3"/>
+    <rect x="20" y="10" width="12" height="4" rx="2" fill="${col}" opacity=".7"/>
+    <circle cx="20" cy="10" r="2.5" fill="${col}"/>
+    <circle cx="26" cy="8" r="2.5" fill="${col}"/>
+    <circle cx="32" cy="10" r="2.5" fill="${col}"/>
+    <!-- Dress -->
+    <path d="M14 42 Q10 62 26 64 Q42 62 38 42 Z" fill="${col}" opacity=".18"/>
+    <path d="M17 38 Q14 50 26 53 Q38 50 35 38 Z" fill="${col}" opacity=".28"/>
+    <!-- Flower -->
+    <circle cx="26" cy="38" r="4" fill="${col}" opacity=".4"/>
+    <circle cx="26" cy="38" r="2" fill="${col}" opacity=".8"/>
+    <!-- Face -->
+    <circle cx="26" cy="20" r="8" fill="#f5e6d0" stroke="${col}" stroke-width="1"/>
+    <circle cx="23" cy="18" r="1.2" fill="${col}"/>
+    <circle cx="29" cy="18" r="1.2" fill="${col}"/>
+    <path d="M23 22 Q26 25 29 22" stroke="${col}" stroke-width="1" fill="none"/>
+    <!-- Suit watermark -->
+    <text x="26" y="56" text-anchor="middle" font-size="11" fill="${col}" opacity=".25">${suit}</text>
+  </svg>`,
+
+  J: (col,suit) => `<svg viewBox="0 0 52 68" xmlns="http://www.w3.org/2000/svg">
+    <!-- Hat -->
+    <rect x="16" y="8" width="20" height="4" rx="2" fill="${col}" opacity=".8"/>
+    <rect x="20" y="4" width="12" height="8" rx="2" fill="${col}" opacity=".7"/>
+    <!-- Feather -->
+    <path d="M36 6 Q44 2 40 14 Q36 10 36 6" fill="${col}" opacity=".5"/>
+    <!-- Body / tunic -->
+    <rect x="16" y="36" width="20" height="20" rx="3" fill="${col}" opacity=".18"/>
+    <!-- Belt -->
+    <rect x="14" y="44" width="24" height="3" rx="1" fill="${col}" opacity=".4"/>
+    <!-- Sceptre -->
+    <line x1="34" y1="30" x2="34" y2="56" stroke="${col}" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="34" cy="28" r="3" fill="${col}" opacity=".7"/>
+    <!-- Face -->
+    <circle cx="26" cy="22" r="8" fill="#f5e6d0" stroke="${col}" stroke-width="1"/>
+    <circle cx="23" cy="20" r="1.2" fill="${col}"/>
+    <circle cx="29" cy="20" r="1.2" fill="${col}"/>
+    <path d="M23 24 Q26 27 29 24" stroke="${col}" stroke-width="1" fill="none"/>
+    <!-- Suit watermark -->
+    <text x="26" y="56" text-anchor="middle" font-size="11" fill="${col}" opacity=".25">${suit}</text>
+  </svg>`
+};
+
+function mkCard(card,_int,sel,ani){
+  const el=document.createElement('div');
+  const isRed=RED.has(card.suit);
+  el.className='card '+(isRed?'red':'black')+(sel?' sel':'')+(ani?' ani':'');
+  el.dataset.id=card.id;
+  const col=isRed?'#cc0000':'#111111';
+
+  // Top-left corner
+  const top=document.createElement('div');
+  top.className='card-corner-top';
+  const tr=document.createElement('div');tr.className='cr';tr.textContent=card.rank;
+  const ts=document.createElement('div');ts.className='cs-small';ts.textContent=card.suit;
+  top.append(tr,ts);
+
+  // Centre
+  const mid=document.createElement('div');
+  mid.className='card-center';
+  const isFace=['J','Q','K'].includes(card.rank);
+  if(isFace && FACE_ART[card.rank]){
+    const fa=document.createElement('div');
+    fa.className='face-art';
+    fa.innerHTML=FACE_ART[card.rank](col,card.suit);
+    mid.appendChild(fa);
+  } else {
+    const pip=document.createElement('div');
+    pip.className='pip-suit';
+    pip.textContent=card.suit;
+    pip.style.color=col;
+    mid.appendChild(pip);
+  }
+
+  // Bottom-right corner
+  const bot=document.createElement('div');
+  bot.className='card-corner-bot';
+  const br=document.createElement('div');br.className='crb';br.textContent=card.rank;
+  const bs=document.createElement('div');bs.className='csb';bs.textContent=card.suit;
+  bot.append(br,bs);
+
+  el.append(top,mid,bot);
+  return el;
+}
+
+// ═══════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════
+function sortSeq(arr){ arr.sort((a,b)=>{ const av=a.rank==='A'?14:rv(a.rank),bv=b.rank==='A'?14:rv(b.rank); return av-bv; }); }
+
+function toast(msg){ alert(msg); }
+
+// ── TURN BANNER ──────────────────────────────────────────────────────────────
+function showTurnBanner(icon, title, sub){
+  const b=document.getElementById('turn-banner');
+  const bi=document.getElementById('turn-banner-icon');
+  const bt=document.getElementById('turn-banner-text');
+  const bs=document.getElementById('turn-banner-sub');
+  bi.textContent=icon; bt.textContent=title; bs.textContent=sub;
+  b.classList.remove('hide'); b.classList.add('show');
+}
+function hideTurnBanner(){
+  const b=document.getElementById('turn-banner');
+  b.classList.remove('show'); b.classList.add('hide');
+  setTimeout(()=>b.classList.remove('hide'),500);
+}
+
+// ── NEW-SET FLASH ─────────────────────────────────────────────────────────────
+// Call after table sets are rendered; indices = array of set indices to flash
+function flashNewSets(indices){
+  const setEls=document.getElementById('table-sets').querySelectorAll('.tset');
+  indices.forEach(i=>{
+    const el=setEls[i];
+    if(!el) return;
+    el.classList.remove('just-dropped');
+    // Force reflow so animation restarts if called twice
+    void el.offsetWidth;
+    el.classList.add('just-dropped');
+    setTimeout(()=>el.classList.remove('just-dropped'), 1900);
+  });
+}
+
+function penaltyFlash(){
+  const w=document.getElementById('table-wrap');
+  w.classList.add('pf'); setTimeout(()=>w.classList.remove('pf'),1600);
+}
+
+const _flashTimers={};
+function flashSet(si,cls){
+  const sets=document.getElementById('table-sets').children;
+  if(sets[si]){ sets[si].classList.add(cls); clearTimeout(_flashTimers[si]); _flashTimers[si]=setTimeout(()=>{ if(sets[si])sets[si].classList.remove(cls); },800); }
+}
+
+// ═══════════════════════════════════════════
+//  DRAG-REORDER HAND
+// ═══════════════════════════════════════════
+const DR={active:false,moved:false,ghost:null,si:null,di:null,sx:0,sy:0,pc:null};
+
+function drStart(e){
+  if(G.rearrange) return;
+  const card=e.currentTarget; const id=card.dataset.id; if(!id)return;
+  const cx=e.touches?e.touches[0].clientX:e.clientX;
+  const cy=e.touches?e.touches[0].clientY:e.clientY;
+  DR.sx=cx;DR.sy=cy;DR.active=true;DR.moved=false;
+  DR.si=G.playerHand.findIndex(c=>c.id===id);DR.di=DR.si;DR.pc=card;
+  document.addEventListener('mousemove',drMove);document.addEventListener('mouseup',drEnd);
+  document.addEventListener('touchmove',drMove,{passive:false});document.addEventListener('touchend',drEnd);
+}
+
+function drMove(e){
+  if(!DR.active)return;
+  const cx=e.touches?e.touches[0].clientX:e.clientX;
+  const cy=e.touches?e.touches[0].clientY:e.clientY;
+  if(!DR.moved&&Math.abs(cx-DR.sx)<5&&Math.abs(cy-DR.sy)<5)return;
+  if(e.cancelable)e.preventDefault();
+  if(!DR.moved){
+    DR.moved=true;
+    const src=DR.pc; const gh=src.cloneNode(true); gh.id='drag-ghost';
+    gh.style.cssText=`width:${src.offsetWidth}px;height:${src.offsetHeight}px;position:fixed;pointer-events:none;z-index:9999;transform:rotate(4deg) scale(1.07);box-shadow:4px 12px 28px rgba(0,0,0,.58);animation:none;transition:none;`;
+    const r=src.getBoundingClientRect(); gh.style.left=r.left+'px'; gh.style.top=r.top+'px';
+    document.body.appendChild(gh); DR.ghost=gh; src.classList.add('dragging');
+  }
+  const r=DR.pc.getBoundingClientRect();
+  DR.ghost.style.left=(cx-r.width/2)+'px'; DR.ghost.style.top=(cy-r.height/2)+'px';
+  const con=document.getElementById('player-hand');
+  const cards=[...con.querySelectorAll('.hc')];
+  let nd=G.playerHand.length;
+  for(let i=0;i<cards.length;i++){ const cr=cards[i].getBoundingClientRect(); if(cx<cr.left+32){nd=i;break;} }
+  if(nd!==DR.di){
+    DR.di=nd;
+    const old=document.getElementById('drop-ind'); if(old)old.remove();
+    const ind=document.createElement('div'); ind.id='drop-ind'; ind.className='drop-ind';
+    if(nd>=cards.length)con.appendChild(ind); else con.insertBefore(ind,cards[nd]);
+  }
+}
+
+function drEnd(){
+  document.removeEventListener('mousemove',drMove);document.removeEventListener('mouseup',drEnd);
+  document.removeEventListener('touchmove',drMove);document.removeEventListener('touchend',drEnd);
+  if(!DR.active)return;
+  if(DR.moved&&DR.ghost){
+    DR.ghost.remove();DR.ghost=null;
+    if(DR.pc)DR.pc.classList.remove('dragging');
+    const f=DR.si,t=DR.di;
+    if(f!==t&&f!==t-1){ const c=G.playerHand.splice(f,1)[0]; G.playerHand.splice(t>f?t-1:t,0,c); }
+    const old=document.getElementById('drop-ind'); if(old)old.remove();
+    renderHand(); renderStatus();
+  }
+  DR.active=false;DR.moved=false;DR.ghost=null;DR.pc=null;DR.si=null;DR.di=null;
+}
+
+render();
 </script>
 </body>
 </html>
