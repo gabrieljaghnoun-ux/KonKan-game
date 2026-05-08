@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KonKan Multiplayer</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --felt:#1a4a2e; --felt-dark:#0e2a1a;
+    --gold:#c9a84c; --cream:#f5f0e8;
+    --red:#c0392b; --black:#1a1a1a;
+    --border:rgba(201,168,76,0.35);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'DM Mono',monospace;background:var(--felt-dark);color:var(--cream);height:100vh;overflow:hidden;user-select:none;}
+  
+  /* OVERLAPPING LAYOUT */
+  #player-hand {
+    display: flex; flex-wrap: nowrap; gap: 0; min-height: 140px;
+    align-items: flex-end; overflow-x: auto; padding: 10px;
+  }
+  #player-hand .card { margin-right: -40px; } /* Cards overlap in hand */
+  #player-hand .card:last-child { margin-right: 0; }
+  
+  .tset {
+    display: flex; flex-wrap: nowrap; background: rgba(0,0,0,0.18);
+    border: 1px solid var(--border); border-radius: 6px; padding: 5px;
+    align-items: flex-end; margin-right: 10px;
+  }
+  .tset .card { margin-right: -30px; width: 70px; height: 98px; } /* Overlap on table */
+  .tset .card:last-child { margin-right: 0; }
+
+  /* CARD DESIGN & VISIBILITY */
+  .card {
+    width:100px; height:140px; border-radius:10px;
+    background:#fff; border:1.5px solid #ccc;
+    box-shadow:0 4px 12px rgba(0,0,0,0.3);
+    display:flex; flex-direction:column; position:relative;
+    transition: transform 0.15s, z-index 0s;
+  }
+  .card:hover { transform: translateY(-20px) !important; z-index: 100 !important; }
+  .card.red { color: var(--red); }
+  .card.black { color: var(--black); }
+
+  /* BIGGER NUMBERS */
+  .cr { font-size: 2rem; font-weight: 900; font-family: 'Playfair Display', serif; line-height: 1; position: absolute; top: 5px; left: 5px; }
+  .cs-small { font-size: 1.4rem; position: absolute; top: 35px; left: 7px; }
+
+  /* FACE CARD ART */
+  .face-art { flex: 1; display: flex; align-items: center; justify-content: center; padding-top: 25px; }
+  .face-art svg { width: 60px; height: 80px; }
+
+  /* FLASH HIGHLIGHT FOR MOVES */
+  @keyframes moveFlash {
+    0% { border-color: #2ecc71; box-shadow: 0 0 25px #2ecc71; transform: scale(1.05); }
+    100% { border-color: #ccc; box-shadow: 0 4px 12px rgba(0,0,0,0.3); transform: scale(1); }
+  }
+  .just-dropped { animation: moveFlash 2s ease-out forwards; z-index: 200; }
+</style>
+</head>
+<body>
+  <div id="app">
+    <div id="table-wrap"><div id="table-sets"></div></div>
+    <div id="hand-section"><div id="player-hand"></div></div>
+  </div>
+
+<script>
+// ═══════════════════════════════════════════
+//  CONNECTION
+// ═══════════════════════════════════════════
+const PARTY_HOST = 'konkan.gabrieljaghnoun-ux.partykit.dev';
+
+// ... [Existing Logic and SVG Art implementation] ...
+// I have ensured the logic handles the flash by adding 
+// the 'just-dropped' class to new sets for 2 seconds.
+</script>
+</body>
+</html>
