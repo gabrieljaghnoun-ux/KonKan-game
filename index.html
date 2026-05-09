@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KonKan Online</title>
+<title>KonKan Multiplayer</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <style>
@@ -32,66 +32,53 @@
   #game-area{display:flex;flex-direction:column;flex:1;overflow:hidden;}
 
   /* ── OPPONENT HAND ── */
-  #ai-row{padding:6px 18px;flex-shrink:0;display:flex;align-items:center;gap:10px;}
+  #opp-row{padding:6px 18px;flex-shrink:0;display:flex;align-items:center;gap:10px;}
   .plabel{font-size:.62rem;color:var(--gold);letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;min-width:55px;}
-  #ai-hand{display:flex;flex-wrap:nowrap;overflow:hidden;} #ai-hand .cb{margin-right:-14px;} #ai-hand .cb:last-child{margin-right:0;}
+  #opp-hand{display:flex;flex-wrap:nowrap;overflow:hidden;} #opp-hand .cb{margin-right:-14px;} #opp-hand .cb:last-child{margin-right:0;}
   .cb{width:40px;height:56px;border-radius:4px;background:linear-gradient(135deg,#1e3a6e,#2d5499);border:1px solid rgba(255,255,255,.18);box-shadow:1px 1px 4px rgba(0,0,0,.4);position:relative;overflow:hidden;flex-shrink:0;}
 
   /* ── TABLE ── */
-  #table-wrap{flex:1;overflow-y:auto;overflow-x:hidden;padding:8px 18px;background:var(--felt);margin:4px 10px;border-radius:10px;border:1px solid var(--border);}
-  #tbl-hdr{font-size:.58rem;color:rgba(201,168,76,0.45);letter-spacing:.16em;text-transform:uppercase;margin-bottom:7px;text-align:center;}
+  #table-wrap{flex:1;overflow-y:auto;overflow-x:hidden;padding:8px 18px;background:var(--felt);margin:4px 10px;border-radius:10px;border:1px solid var(--border);transition:border-color .3s,box-shadow .3s;}
+  #table-wrap.rmode{border-color:rgba(52,152,219,.6);box-shadow:0 0 18px rgba(52,152,219,.18);}
   #table-sets{display:flex;flex-wrap:wrap;gap:14px;min-height:90px;align-content:flex-start;}
-
-  /* ── DECK ── */
-  #deck-row{display:flex;align-items:center;justify-content:center;gap:18px;padding:5px 18px;flex-shrink:0;}
-  .dstack{width:48px;height:66px;position:relative;cursor:pointer;}
-  .dtop{position:relative;width:48px;height:66px;border-radius:5px;background:linear-gradient(135deg,#1e3a6e,#2d5499);border:1px solid rgba(255,255,255,.18);z-index:1;box-shadow:2px 2px 8px rgba(0,0,0,.5);}
-  .dcnt{font-size:.6rem;color:rgba(255,255,255,.45);text-align:center;position:absolute;bottom:-18px;width:100%;}
-
-  /* ── STAGE ── */
-  #stage-wrap{display:none;padding:3px 18px;flex-shrink:0;}
-  #stage-wrap.show{display:block;}
-  #stage-sets{display:flex;flex-wrap:wrap;gap:7px;min-height:82px;background:rgba(0,0,0,.13);border:1px dashed rgba(201,168,76,.22);border-radius:6px;padding:5px 7px;}
-
-  /* ── PLAYER HAND ── */
-  #hand-section{padding:2px 18px 8px;flex-shrink:0;overflow:visible;}
-  #player-hand{display:flex;flex-wrap:nowrap;min-height:115px;align-items:flex-end;position:relative;overflow-x:auto;padding:18px 6px 4px 6px;}
-  #player-hand .card{margin-right:-28px;}
-  #player-hand .card:last-child{margin-right:0;}
 
   /* ── CARDS ── */
   .card{
-    width:80px;height:112px;border-radius:8px;background:#fff;border:1.5px solid #ccc;
-    box-shadow:0 3px 10px rgba(0,0,0,.28);display:flex;flex-direction:column;padding:4px 5px;
-    cursor:pointer;flex-shrink:0;position:relative;
+    width:80px;height:112px;border-radius:8px;
+    background:#fff;border:1.5px solid #ccc;
+    box-shadow:0 3px 10px rgba(0,0,0,.28);
+    display:flex;flex-direction:column;
+    padding:4px 5px;
+    cursor:pointer;
+    flex-shrink:0;position:relative;overflow:hidden;
   }
   .card.sel{transform:translateY(-20px)!important;border-color:var(--gold);box-shadow:0 0 0 2.5px var(--gold);}
-  .card.red{color:#cc0000;} .card.black{color:#111;}
-  .cr{font-size:1.35rem;font-weight:900;font-family:'Playfair Display',serif;}
+  .card.red{color:var(--red);} .card.black{color:var(--black);}
+
+  .cr{font-size:1.35rem;font-weight:900;font-family:'Playfair Display',serif;line-height:1;}
   .card-center{flex:1;display:flex;align-items:center;justify-content:center;font-size:1.9rem;}
 
-  .tset{display:flex;background:rgba(0,0,0,.18);border:1px solid rgba(201,168,76,0.18);border-radius:6px;padding:5px;min-height:70px;align-items:flex-end;}
-  .tset .card{margin-right:-22px;width:62px;height:86px;}
-  .tset.hl{border-color:var(--gold);}
+  #player-hand{display:flex;overflow-x:auto;padding:18px 6px 4px 6px;min-height:115px;align-items:flex-end;}
+  #player-hand .card{margin-right:-28px;}
 
-  /* ── ACTION BAR ── */
-  #action-bar{display:flex;gap:7px;justify-content:center;padding:5px 18px 9px;flex-shrink:0;}
-  .btn{font-family:'DM Mono',monospace;font-size:.67rem;padding:7px 13px;border-radius:5px;cursor:pointer;border:1px solid;text-transform:uppercase;}
-  .btn-gold{background:var(--gold);color:var(--felt-dark);border-color:var(--gold);}
-  .btn:disabled{opacity:.28;cursor:not-allowed;}
+  .tset{display:flex;background:rgba(0,0,0,.18);border:1px solid rgba(201,168,76,.18);border-radius:6px;padding:5px;min-height:70px;align-items:flex-end;}
+  .tset .card{margin-right:-22px;width:62px;height:86px;}
 
   /* ── MODALS ── */
-  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;z-index:100;backdrop-filter:blur(5px);}
-  .modal{background:var(--felt-dark);border:1px solid var(--border);border-radius:14px;padding:30px;max-width:460px;width:92%;text-align:center;}
-  #turn-banner{position:fixed;top:0;left:0;right:0;display:flex;justify-content:center;transform:translateY(-100%);transition:transform .3s;z-index:500;}
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:100;backdrop-filter:blur(5px);}
+  .modal{background:var(--felt-dark);border:1px solid var(--gold);border-radius:14px;padding:30px;max-width:460px;width:92%;text-align:center;}
+  .modal h2{color:var(--gold);margin-bottom:15px;}
+  #share-link{background:#000; color:var(--green); border:1px solid var(--border); padding:10px; width:100%; margin:10px 0; font-family:monospace; font-size:0.8rem;}
+
+  #turn-banner{position:fixed;top:0;left:0;right:0;display:flex;justify-content:center;transform:translateY(-100%);transition:0.3s;z-index:500;}
   #turn-banner.show{transform:translateY(0);}
 </style>
 </head>
 <body>
 
 <div id="turn-banner">
-  <div style="background:rgba(10,30,18,0.95); border:1px solid var(--gold); padding:10px 30px; border-radius:0 0 10px 10px;">
-    <span id="banner-text" style="color:var(--gold); font-weight:bold;">Waiting for Turn...</span>
+  <div style="background:var(--felt-dark); border:1px solid var(--gold); padding:10px 20px; border-radius:0 0 10px 10px;">
+    <span id="banner-text" style="color:var(--gold)">Waiting for Turn...</span>
   </div>
 </div>
 
@@ -100,240 +87,229 @@
     <h1>KonKan Online</h1>
     <div class="status-bar">
       <span class="pill" id="turn-pill">Connecting...</span>
-      <span class="pill" id="deck-pill">Deck: --</span>
+      <span class="pill" id="deck-pill">Deck: 0</span>
     </div>
   </div>
 
   <div id="game-area">
-    <div id="ai-row">
+    <div id="opp-row">
       <div class="plabel">Opponent</div>
-      <div id="ai-hand"></div>
+      <div id="opp-hand"></div>
     </div>
 
     <div id="table-wrap">
-      <div id="tbl-hdr">— TABLE —</div>
       <div id="table-sets"></div>
     </div>
 
-    <div id="deck-row">
-      <div style="position:relative;">
-        <div class="dstack" onclick="drawCard()"><div class="dtop"></div></div>
-        <div class="dcnt" id="deck-cnt">--</div>
-      </div>
+    <div id="deck-row" style="display:flex; justify-content:center; padding:10px;">
+      <div class="cb" style="width:48px; height:66px; cursor:pointer;" onclick="drawCard()"></div>
+      <div style="margin-left:10px; font-size:0.7rem; color:var(--gold)">Draw to end turn</div>
     </div>
 
-    <div id="stage-wrap">
-      <div id="stage-sets"></div>
+    <div id="stage-wrap" style="padding:10px; display:none;">
+      <div id="stage-sets" style="display:flex; gap:10px; background:rgba(0,0,0,0.2); padding:10px; border-radius:5px;"></div>
     </div>
 
-    <div id="hand-section">
-      <div id="player-hand"></div>
-    </div>
+    <div id="player-hand"></div>
 
-    <div id="action-bar">
-      <button class="btn btn-gold" id="btn-stage" onclick="stageSelection()">Stage Set</button>
-      <button class="btn btn-gold" id="btn-drop" onclick="dropStaged()" disabled>Drop All</button>
-      <button class="btn btn-gold" id="btn-clear" onclick="clearSel()">Clear</button>
+    <div id="action-bar" style="display:flex; justify-content:center; gap:10px; padding:10px;">
+      <button class="pill" style="cursor:pointer" onclick="stageSelection()">Stage Set</button>
+      <button class="pill" style="cursor:pointer" onclick="dropStaged()">Drop All</button>
+      <button class="pill" style="cursor:pointer" onclick="clearSel()">Clear</button>
     </div>
   </div>
 </div>
 
-<div class="overlay" id="modal-start">
-  <div class="modal" id="modal-content">
-    <h2>Initializing...</h2>
-    <p>Please wait while we set up your connection.</p>
+<div class="overlay" id="modal-lobby">
+  <div class="modal">
+    <h2>Multiplayer Lobby</h2>
+    <p id="lobby-msg">Generating your link...</p>
+    <input type="text" id="share-link" readonly onclick="this.select()">
+    <p style="font-size:0.7rem; color:rgba(255,255,255,0.5)">Send this link to a friend. The game will start automatically when they join.</p>
   </div>
 </div>
 
 <script>
-// ═══════════════════════════════════════════
-//  MULTIPLAYER LOGIC
-// ═══════════════════════════════════════════
-let peer, conn, isHost = false;
+// --- NETWORKING ---
+let peer, conn;
+let isHost = false;
 const SUITS = ['♠','♥','♦','♣'], RANKS = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
 
 let G = {
-  deck:[], playerHand:[], aiHand:[], tableSets:[],
-  selected:[], staged:[], hlSet:null,
-  playerMadeDrop:false, isPlayerTurn:false, actionTaken:false, phase:'start'
+    deck: [],
+    playerHand: [],
+    oppHand: [],
+    tableSets: [],
+    selected: [],
+    staged: [],
+    isPlayerTurn: false,
+    playerMadeDrop: false
 };
 
-function init() {
-  peer = new Peer();
-  peer.on('open', id => {
-    const params = new URLSearchParams(window.location.search);
-    const joinId = params.get('join');
-    if (joinId) {
-      connectToPeer(joinId);
-    } else {
-      isHost = true;
-      showLobby(id);
-    }
-  });
-  peer.on('connection', c => {
-    conn = c;
-    setupConn();
-    if (isHost) startGame();
-  });
+function initMultiplayer() {
+    peer = new Peer();
+    
+    peer.on('open', (id) => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const joinId = urlParams.get('join');
+        
+        if (joinId) {
+            document.getElementById('lobby-msg').innerText = "Joining game...";
+            conn = peer.connect(joinId);
+            setupConnection();
+        } else {
+            isHost = true;
+            const link = window.location.origin + window.location.pathname + '?join=' + id;
+            document.getElementById('share-link').value = link;
+            document.getElementById('lobby-msg').innerText = "Waiting for an opponent...";
+        }
+    });
+
+    peer.on('connection', (c) => {
+        conn = c;
+        setupConnection();
+        if (isHost) startHostGame();
+    });
 }
 
-function showLobby(id) {
-  const link = window.location.origin + window.location.pathname + '?join=' + id;
-  document.getElementById('modal-content').innerHTML = `
-    <h2>Lobby Created</h2>
-    <p>Invite a friend to play by sharing this link:</p>
-    <input type="text" value="${link}" style="width:100%; padding:8px; margin:10px 0;" readonly onclick="this.select()">
-    <p>Waiting for opponent...</p>
-  `;
-}
+function setupConnection() {
+    conn.on('open', () => {
+        document.getElementById('modal-lobby').style.display = 'none';
+    });
 
-function connectToPeer(id) {
-  conn = peer.connect(id);
-  setupConn();
-}
-
-function setupConn() {
-  conn.on('open', () => {
-    document.getElementById('modal-start').style.display = 'none';
-  });
-  conn.on('data', data => {
-    G = data;
-    render();
-    if(G.isPlayerTurn) toggleBanner(true, "Your Turn!");
-  });
+    conn.on('data', (data) => {
+        // We receive the updated game state
+        G = data;
+        render();
+        updateBanner();
+    });
 }
 
 function sync() {
-  if (conn && conn.open) {
-    let state = JSON.parse(JSON.stringify(G));
-    // Swap perspective: our hand becomes their 'opponent' hand
-    let temp = state.playerHand;
-    state.playerHand = state.aiHand;
-    state.aiHand = temp;
-    state.isPlayerTurn = !G.isPlayerTurn;
-    conn.send(state);
-  }
+    if (conn && conn.open) {
+        // Before sending, we swap the hands so the other player sees themselves as playerHand
+        let stateToSend = JSON.parse(JSON.stringify(G));
+        let temp = stateToSend.playerHand;
+        stateToSend.playerHand = stateToSend.oppHand;
+        stateToSend.oppHand = temp;
+        stateToSend.isPlayerTurn = !G.isPlayerTurn;
+        conn.send(stateToSend);
+    }
 }
 
-// ═══════════════════════════════════════════
-//  GAME ACTIONS
-// ═══════════════════════════════════════════
-function startGame() {
-  G.deck = [];
-  for(let i=0; i<2; i++) for(const s of SUITS) for(const r of RANKS) G.deck.push({suit:s,rank:r,id:`${r}${s}${i}`});
-  G.deck.sort(() => Math.random() - 0.5);
-  G.playerHand = G.deck.splice(0, 13);
-  G.aiHand = G.deck.splice(0, 13);
-  G.isPlayerTurn = true;
-  G.phase = 'playing';
-  render();
-  sync();
+// --- GAME LOGIC ---
+function startHostGame() {
+    G.deck = [];
+    for(let i=0; i<2; i++) for(const s of SUITS) for(const r of RANKS) G.deck.push({suit:s,rank:r,id:`${r}${s}${i}`});
+    G.deck.sort(() => Math.random() - 0.5);
+    
+    G.playerHand = G.deck.splice(0, 13);
+    G.oppHand = G.deck.splice(0, 13);
+    G.isPlayerTurn = true;
+    render();
+    sync();
 }
 
 function drawCard() {
-  if (!G.isPlayerTurn || G.deck.length === 0) return;
-  G.playerHand.push(G.deck.shift());
-  endTurn();
+    if (!G.isPlayerTurn || G.deck.length === 0) return;
+    G.playerHand.push(G.deck.shift());
+    G.selected = [];
+    endTurn();
 }
 
 function stageSelection() {
-  if (G.selected.length < 3) return;
-  const cards = G.selected.map(id => G.playerHand.find(c => c.id === id));
-  G.staged.push([...cards]);
-  G.playerHand = G.playerHand.filter(c => !G.selected.includes(c.id));
-  G.selected = [];
-  render();
+    if (G.selected.length < 3) return;
+    const cards = G.selected.map(id => G.playerHand.find(c => c.id === id));
+    G.staged.push([...cards]);
+    G.playerHand = G.playerHand.filter(c => !G.selected.includes(c.id));
+    G.selected = [];
+    render();
 }
 
 function dropStaged() {
-  G.staged.forEach(set => G.tableSets.push(set));
-  G.staged = [];
-  G.playerMadeDrop = true;
-  G.actionTaken = true;
-  render();
-  endTurn();
+    if (G.staged.length === 0) return;
+    G.staged.forEach(set => G.tableSets.push(set));
+    G.staged = [];
+    G.playerMadeDrop = true;
+    render();
+    endTurn();
 }
 
 function endTurn() {
-  G.isPlayerTurn = false;
-  G.selected = [];
-  toggleBanner(false);
-  render();
-  sync();
+    G.isPlayerTurn = false;
+    render();
+    sync();
 }
 
 function toggleCard(id) {
-  if (!G.isPlayerTurn) return;
-  const i = G.selected.indexOf(id);
-  if (i === -1) G.selected.push(id); else G.selected.splice(i, 1);
-  render();
+    if (!G.isPlayerTurn) return;
+    const i = G.selected.indexOf(id);
+    if (i === -1) G.selected.push(id); else G.selected.splice(i, 1);
+    render();
 }
 
 function clearSel() { G.selected = []; render(); }
 
-// ═══════════════════════════════════════════
-//  RENDER HELPERS
-// ═══════════════════════════════════════════
+// --- RENDER ---
 function render() {
-  document.getElementById('turn-pill').textContent = G.isPlayerTurn ? "Your Turn" : "Opponent Turn";
-  document.getElementById('deck-cnt').textContent = G.deck.length;
-  
-  const hand = document.getElementById('player-hand');
-  hand.innerHTML = '';
-  G.playerHand.forEach(c => {
-    const el = mkCard(c);
-    if (G.selected.includes(c.id)) el.classList.add('sel');
-    el.onclick = () => toggleCard(c.id);
-    hand.appendChild(el);
-  });
+    document.getElementById('turn-pill').innerText = G.isPlayerTurn ? "Your Turn" : "Opponent Turn";
+    document.getElementById('deck-pill').innerText = "Deck: " + G.deck.length;
 
-  const opp = document.getElementById('ai-hand');
-  opp.innerHTML = '';
-  G.aiHand.forEach(() => {
-    const d = document.createElement('div'); d.className = 'cb'; opp.appendChild(d);
-  });
-
-  const table = document.getElementById('table-sets');
-  table.innerHTML = '';
-  G.tableSets.forEach(set => {
-    const sEl = document.createElement('div'); sEl.className = 'tset';
-    set.forEach(c => sEl.appendChild(mkCard(c)));
-    table.appendChild(sEl);
-  });
-
-  const stage = document.getElementById('stage-sets');
-  const stageWrap = document.getElementById('stage-wrap');
-  stage.innerHTML = '';
-  if (G.staged.length > 0) {
-    stageWrap.style.display = 'block';
-    G.staged.forEach(set => {
-      const sEl = document.createElement('div'); sEl.style.display='flex';
-      set.forEach(c => sEl.appendChild(mkCard(c)));
-      stage.appendChild(sEl);
+    const handEl = document.getElementById('player-hand');
+    handEl.innerHTML = '';
+    G.playerHand.forEach(c => {
+        const card = mkCard(c);
+        if (G.selected.includes(c.id)) card.classList.add('sel');
+        card.onclick = () => toggleCard(c.id);
+        handEl.appendChild(card);
     });
-  } else stageWrap.style.display = 'none';
 
-  document.getElementById('btn-drop').disabled = G.staged.length === 0;
+    const oppHandEl = document.getElementById('opp-hand');
+    oppHandEl.innerHTML = '';
+    G.oppHand.forEach(() => {
+        const back = document.createElement('div');
+        back.className = 'cb';
+        oppHandEl.appendChild(back);
+    });
+
+    const tableEl = document.getElementById('table-sets');
+    tableEl.innerHTML = '';
+    G.tableSets.forEach(set => {
+        const setDiv = document.createElement('div');
+        setDiv.className = 'tset';
+        set.forEach(c => setDiv.appendChild(mkCard(c)));
+        tableEl.appendChild(setDiv);
+    });
+
+    const stageWrap = document.getElementById('stage-wrap');
+    const stageEl = document.getElementById('stage-sets');
+    if (G.staged.length > 0) {
+        stageWrap.style.display = 'block';
+        stageEl.innerHTML = '';
+        G.staged.forEach(set => {
+            const d = document.createElement('div'); d.style.display='flex';
+            set.forEach(c => d.appendChild(mkCard(c)));
+            stageEl.appendChild(d);
+        });
+    } else stageWrap.style.display = 'none';
 }
 
 function mkCard(c) {
-  const el = document.createElement('div');
-  const isRed = ['♥','♦'].includes(c.suit);
-  el.className = `card ${isRed ? 'red' : 'black'}`;
-  el.innerHTML = `<div class="cr">${c.rank}</div><div class="card-center">${c.suit}</div>`;
-  return el;
+    const el = document.createElement('div');
+    const isRed = ['♥','♦'].includes(c.suit);
+    el.className = 'card ' + (isRed ? 'red' : 'black');
+    el.innerHTML = `<div class="cr">${c.rank}</div><div class="card-center">${c.suit}</div>`;
+    return el;
 }
 
-function toggleBanner(show, text) {
-  const b = document.getElementById('turn-banner');
-  if (show) {
-    document.getElementById('banner-text').textContent = text;
-    b.classList.add('show');
-    setTimeout(() => b.classList.remove('show'), 2000);
-  } else b.classList.remove('show');
+function updateBanner() {
+    const banner = document.getElementById('turn-banner');
+    document.getElementById('banner-text').innerText = G.isPlayerTurn ? "Your Turn!" : "Waiting for Opponent...";
+    banner.classList.add('show');
+    if (G.isPlayerTurn) setTimeout(() => banner.classList.remove('show'), 2000);
 }
 
-init();
+initMultiplayer();
 </script>
 </body>
 </html>
