@@ -17,7 +17,7 @@
   body{font-family:'DM Mono',monospace;background:var(--felt-dark);color:var(--cream);height:100vh;overflow:hidden;user-select:none;}
   #app{display:flex;flex-direction:column;height:100vh;}
 
-  /* ── HEADER ── */
+  /* HEADER */
   #header{display:flex;align-items:center;justify-content:space-between;padding:6px 16px;background:var(--felt-dark);border-bottom:1px solid var(--border);flex-shrink:0;}
   #header h1{font-family:'Playfair Display',serif;font-size:1.35rem;color:var(--gold);letter-spacing:.08em;}
   .hdr-right{display:flex;gap:8px;align-items:center;font-size:.65rem;}
@@ -31,75 +31,64 @@
   .conn-dot.ok{background:var(--green);}
   @keyframes blink{0%,100%{opacity:1}50%{opacity:.5}}
 
-  /* ── YOUR TURN SIDEBAR ── */
-  /* Left side: persistent "YOUR TURN" ribbon shown only when it's your turn */
-  #your-turn-ribbon{
-    position:fixed;left:0;top:50%;transform:translateY(-50%);
-    z-index:400;pointer-events:none;
-    display:flex;flex-direction:column;align-items:center;
-    gap:0;
-    opacity:0;transition:opacity .4s;
-  }
+  /* YOUR TURN RIBBON */
+  #your-turn-ribbon{position:fixed;left:0;top:50%;transform:translateY(-50%);z-index:400;pointer-events:none;opacity:0;transition:opacity .4s;}
   #your-turn-ribbon.show{opacity:1;}
-  #your-turn-ribbon-inner{
-    background:linear-gradient(180deg,#0e3d22,#1a5c36);
-    border:1px solid var(--gold);
-    border-left:none;
-    border-radius:0 10px 10px 0;
-    padding:14px 10px;
-    display:flex;flex-direction:column;align-items:center;gap:6px;
-    box-shadow:4px 0 20px rgba(0,0,0,.5);
-    writing-mode:vertical-rl;
-    text-orientation:mixed;
-    transform:rotate(180deg);
-  }
+  #your-turn-ribbon-inner{background:linear-gradient(180deg,#0e3d22,#1a5c36);border:1px solid var(--gold);border-left:none;border-radius:0 10px 10px 0;padding:14px 10px;display:flex;flex-direction:column;align-items:center;gap:6px;box-shadow:4px 0 20px rgba(0,0,0,.5);writing-mode:vertical-rl;text-orientation:mixed;transform:rotate(180deg);}
   #your-turn-emoji{font-size:1.4rem;writing-mode:horizontal-tb;transform:rotate(180deg);}
-  #your-turn-text{
-    font-family:'Playfair Display',serif;
-    font-size:.85rem;font-weight:700;
-    color:var(--gold);
-    letter-spacing:.12em;
-    text-transform:uppercase;
-    white-space:nowrap;
-  }
-  /* pulse the ribbon */
+  #your-turn-text{font-family:'Playfair Display',serif;font-size:.85rem;font-weight:700;color:var(--gold);letter-spacing:.12em;text-transform:uppercase;white-space:nowrap;}
   @keyframes ribbonPulse{0%,100%{box-shadow:4px 0 20px rgba(0,0,0,.5)}50%{box-shadow:4px 0 28px rgba(201,168,76,.4)}}
   #your-turn-ribbon.show #your-turn-ribbon-inner{animation:ribbonPulse 2s infinite;}
 
-  /* ── GAME AREA ── */
-  #game-area{display:flex;flex-direction:column;flex:1;overflow:hidden;margin-left:28px;/* space for ribbon */}
+  /* GAME AREA */
+  #game-area{display:flex;flex-direction:column;flex:1;overflow:hidden;margin-left:28px;}
 
-  /* ── OPPONENT HAND ── */
-  #opp-row{padding:5px 16px;flex-shrink:0;display:flex;align-items:center;gap:10px;}
+  /* OPPONENT ROW — draw button lives here now */
+  #opp-row{padding:5px 10px 5px 16px;flex-shrink:0;display:flex;align-items:center;gap:10px;}
   .plabel{font-size:.6rem;color:var(--gold);letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;min-width:50px;}
-  #opp-hand{display:flex;flex-wrap:nowrap;overflow:hidden;}
+  #opp-hand{display:flex;flex-wrap:nowrap;overflow:hidden;flex:1;}
   #opp-hand .cb{margin-right:-14px;}
   #opp-hand .cb:last-child{margin-right:0;}
   .cb{width:36px;height:50px;border-radius:4px;background:linear-gradient(135deg,#1e3a6e,#2d5499);border:1px solid rgba(255,255,255,.18);position:relative;overflow:hidden;flex-shrink:0;}
   .cb::after{content:'';position:absolute;inset:3px;border:1px solid rgba(255,255,255,.12);border-radius:2px;background:repeating-linear-gradient(45deg,transparent,transparent 3px,rgba(255,255,255,.04) 3px,rgba(255,255,255,.04) 6px);}
+  #opp-cnt{font-size:.6rem;color:rgba(201,168,76,.5);white-space:nowrap;}
 
-  /* ── TABLE ── */
-  #table-wrap{flex:1;overflow-y:auto;overflow-x:hidden;padding:7px 16px;background:var(--felt);margin:3px 8px;border-radius:10px;border:1px solid var(--border);transition:border-color .3s,box-shadow .3s;}
+  /* DRAW BUTTON in opp row */
+  #draw-area{display:flex;flex-direction:column;align-items:center;flex-shrink:0;margin-left:8px;}
+  .dstack{width:40px;height:56px;position:relative;cursor:pointer;}
+  .dstack::before,.dstack::after{content:'';position:absolute;width:40px;height:56px;border-radius:5px;background:linear-gradient(135deg,#1e3a6e,#2d5499);border:1px solid rgba(255,255,255,.13);}
+  .dstack::before{top:-3px;left:-2px;}.dstack::after{top:-1px;left:-1px;}
+  .dtop{position:relative;width:40px;height:56px;border-radius:5px;background:linear-gradient(135deg,#1e3a6e,#2d5499);border:1px solid rgba(255,255,255,.18);z-index:1;transition:transform .15s;box-shadow:2px 2px 8px rgba(0,0,0,.5);}
+  .dtop:hover{transform:translateY(-3px);}
+  #deck-lbl{font-size:.52rem;color:rgba(255,255,255,.4);text-align:center;margin-top:2px;white-space:nowrap;}
+
+  /* TABLE */
+  #table-wrap{flex:1;overflow-y:auto;overflow-x:hidden;padding:7px 16px;background:var(--felt);margin:3px 8px;border-radius:10px;border:1px solid var(--border);transition:border-color .3s,box-shadow .3s;position:relative;}
   #table-wrap.rmode{border-color:rgba(52,152,219,.6);box-shadow:0 0 18px rgba(52,152,219,.18);}
+  /* drag-over-table highlight */
+  #table-wrap.drag-target{border-color:var(--gold);box-shadow:0 0 16px rgba(201,168,76,.35);}
   #table-wrap::-webkit-scrollbar{width:3px;}
   #table-wrap::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
   #tbl-hdr{font-size:.55rem;color:rgba(201,168,76,.45);letter-spacing:.14em;text-transform:uppercase;margin-bottom:6px;text-align:center;transition:color .3s;}
   #tbl-hdr.rmode{color:rgba(52,152,219,.75);}
   #table-sets{display:flex;flex-wrap:wrap;gap:12px;min-height:80px;align-content:flex-start;}
 
-  /* ── TABLE SETS (overlapping) ── */
+  /* TABLE SETS */
   .tset{display:flex;flex-wrap:nowrap;background:rgba(0,0,0,.18);border:1px solid rgba(201,168,76,.18);border-radius:6px;padding:5px 7px;transition:border-color .2s,box-shadow .2s;cursor:default;position:relative;align-items:flex-end;min-height:68px;}
   .tset .card{margin-right:-22px;width:60px;height:84px;}
   .tset .card:last-child{margin-right:0;}
-  .tset .card .cr,.tset .card .crb{font-size:1.05rem;}
-  .tset .card .cs-sm,.tset .card .csb{font-size:.78rem;}
+  .tset .card .cr{font-size:1.2rem;}
+  .tset .card .cs-sm{font-size:.85rem;}
   .tset .card:hover{transform:translateY(-10px)!important;z-index:50!important;}
   .tset.hl{border-color:var(--gold);box-shadow:0 0 10px rgba(201,168,76,.4);}
   .tset.rv{border-color:var(--green);box-shadow:0 0 7px rgba(46,204,113,.3);}
   .tset.ri{border-color:#e74c3c;box-shadow:0 0 7px rgba(231,76,60,.3);}
   .tset.dt{border-color:var(--blue);box-shadow:0 0 10px rgba(52,152,219,.4);cursor:pointer;}
+  /* card-drag-over: set glows when a hand card is dragged over it */
+  .tset.card-drag-over{border-color:var(--gold);box-shadow:0 0 14px rgba(201,168,76,.6);transform:scale(1.02);}
+  .tset.card-drag-invalid{border-color:#e74c3c;box-shadow:0 0 10px rgba(231,76,60,.4);}
 
-  /* ── NEW SET DROP FLASH ── */
+  /* NEW SET DROP FLASH */
   @keyframes setDrop{
     0%  {border-color:var(--green);box-shadow:0 0 0 0 rgba(46,204,113,.9),0 0 28px rgba(46,204,113,.6);}
     35% {border-color:var(--green);box-shadow:0 0 0 10px rgba(46,204,113,0),0 0 36px rgba(46,204,113,.7);}
@@ -108,16 +97,7 @@
   }
   .tset.just-dropped{animation:setDrop 2s ease forwards;}
 
-  /* ── DECK ── */
-  #deck-row{display:flex;align-items:center;justify-content:center;gap:16px;padding:4px 16px;flex-shrink:0;}
-  .dstack{width:44px;height:62px;position:relative;cursor:pointer;}
-  .dstack::before,.dstack::after{content:'';position:absolute;width:44px;height:62px;border-radius:5px;background:linear-gradient(135deg,#1e3a6e,#2d5499);border:1px solid rgba(255,255,255,.13);}
-  .dstack::before{top:-3px;left:-2px;}.dstack::after{top:-1px;left:-1px;}
-  .dtop{position:relative;width:44px;height:62px;border-radius:5px;background:linear-gradient(135deg,#1e3a6e,#2d5499);border:1px solid rgba(255,255,255,.18);z-index:1;transition:transform .15s;box-shadow:2px 2px 8px rgba(0,0,0,.5);}
-  .dtop:hover{transform:translateY(-3px);}
-  .dcnt{font-size:.58rem;color:rgba(255,255,255,.45);text-align:center;position:absolute;bottom:-17px;width:100%;}
-
-  /* ── STAGE ── */
+  /* STAGE */
   #stage-wrap{display:none;padding:2px 16px;flex-shrink:0;}
   #stage-wrap.show{display:block;}
   #stage-lbl{font-size:.55rem;color:rgba(201,168,76,.55);letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px;}
@@ -125,46 +105,47 @@
   .sset{display:flex;flex-wrap:nowrap;background:rgba(201,168,76,.05);border:1px solid rgba(201,168,76,.18);border-radius:4px;padding:3px 4px;cursor:pointer;transition:border-color .2s;align-items:flex-end;min-height:50px;}
   .sset .card{margin-right:-20px;width:50px;height:70px;}
   .sset .card:last-child{margin-right:0;}
-  .sset .card .cr,.sset .card .crb{font-size:.95rem;}
-  .sset .card .cs-sm,.sset .card .csb{font-size:.72rem;}
+  .sset .card .cr{font-size:1rem;}
+  .sset .card .cs-sm{font-size:.75rem;}
   .sset:hover{border-color:rgba(201,168,76,.5);}
   .sset.ok{border-color:var(--green);}
   .sset.bad{border-color:#e74c3c;}
 
-  /* ── PLAYER HAND ── */
+  /* PLAYER HAND — with group spacers */
   #hand-section{padding:2px 16px 8px;flex-shrink:0;overflow:visible;}
   #hand-lbl{font-size:.55rem;color:var(--gold);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;}
   #player-hand{display:flex;flex-wrap:nowrap;gap:0;min-height:112px;align-items:flex-end;position:relative;overflow-x:auto;overflow-y:visible;padding:16px 6px 4px 6px;}
   #player-hand .card{margin-right:-28px;}
   #player-hand .card:last-child{margin-right:0;}
   #player-hand .card:hover,#player-hand .card.sel{margin-right:-28px;}
+  /* spacer between hand groups */
+  .hand-spacer{width:14px;flex-shrink:0;align-self:stretch;}
 
-  /* ── CARDS ── */
-  .card{width:78px;height:108px;border-radius:8px;background:#fff;border:1.5px solid #ccc;box-shadow:0 3px 10px rgba(0,0,0,.28);display:flex;flex-direction:column;padding:4px 5px;cursor:pointer;transition:transform .13s,box-shadow .13s;flex-shrink:0;position:relative;overflow:hidden;}
+  /* CARDS — top-left rank only, large */
+  .card{width:78px;height:108px;border-radius:8px;background:#fff;border:1.5px solid #ccc;box-shadow:0 3px 10px rgba(0,0,0,.28);display:flex;flex-direction:column;padding:5px 6px 4px 6px;cursor:pointer;transition:transform .13s,box-shadow .13s;flex-shrink:0;position:relative;overflow:hidden;}
   .card:hover{transform:translateY(-14px)!important;box-shadow:0 10px 24px rgba(0,0,0,.4);z-index:200!important;}
   .card.sel{transform:translateY(-20px)!important;border-color:var(--gold);box-shadow:0 0 0 2.5px var(--gold),0 10px 22px rgba(0,0,0,.38);z-index:201!important;}
   .card.pu{border-color:var(--blue);box-shadow:0 0 0 2.5px var(--blue),0 8px 18px rgba(0,0,0,.3);transform:translateY(-10px)!important;z-index:200!important;}
   .card.poach-ok{border-color:var(--green);box-shadow:0 0 0 2px var(--green);}
-  .card.red .cr,.card.red .cs-sm,.card.red .crb,.card.red .csb{color:#cc0000;}
-  .card.black .cr,.card.black .cs-sm,.card.black .crb,.card.black .csb{color:#111;}
+  /* drag-to-table feedback */
+  .card.dragging-to-table{opacity:.25;pointer-events:none;}
+  .card.red .cr,.card.red .cs-sm{color:#cc0000;}
+  .card.black .cr,.card.black .cs-sm{color:#111;}
+  /* top-left corner: big rank + suit */
   .card-top{display:flex;flex-direction:column;align-items:flex-start;line-height:1;flex-shrink:0;}
-  .cr{font-size:1.3rem;font-weight:900;font-family:'Playfair Display',serif;line-height:1;}
-  .cs-sm{font-size:.95rem;line-height:1;}
-  .card-bot{display:flex;flex-direction:column;align-items:flex-end;line-height:1;transform:rotate(180deg);flex-shrink:0;}
-  .crb{font-size:1.3rem;font-weight:900;font-family:'Playfair Display',serif;line-height:1;}
-  .csb{font-size:.95rem;line-height:1;}
-  .card-mid{flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;}
-  .pip{font-size:1.85rem;line-height:1;}
-  .face-art{width:100%;height:100%;display:flex;align-items:center;justify-content:center;}
-  .face-art svg{width:50px;height:60px;}
+  .cr{font-size:1.65rem;font-weight:900;font-family:'Playfair Display',serif;line-height:1;}
+  .cs-sm{font-size:1.1rem;line-height:1;margin-top:1px;}
+  /* centre: large suit symbol */
+  .card-mid{flex:1;display:flex;align-items:center;justify-content:center;}
+  .pip{font-size:2.4rem;line-height:1;opacity:.18;}
   .card.hc{cursor:grab;}.card.hc:active{cursor:grabbing;}
   .card.dragging{opacity:.15;transform:none!important;box-shadow:none!important;pointer-events:none;}
 
-  /* ── DRAG ── */
+  /* DRAG */
   #drag-ghost{position:fixed;pointer-events:none;z-index:9999;transform:rotate(4deg) scale(1.07);box-shadow:4px 12px 28px rgba(0,0,0,.6);transition:none;}
   .drop-ind{width:3px;min-height:108px;border-radius:3px;background:var(--gold);box-shadow:0 0 7px rgba(201,168,76,.6);flex-shrink:0;align-self:center;z-index:300;}
 
-  /* ── ACTION BAR ── */
+  /* ACTION BAR */
   #action-bar{display:flex;gap:6px;justify-content:center;padding:4px 16px 8px;flex-shrink:0;flex-wrap:wrap;}
   .btn{font-family:'DM Mono',monospace;font-size:.64rem;letter-spacing:.07em;padding:7px 12px;border-radius:5px;cursor:pointer;border:1px solid;transition:all .13s;text-transform:uppercase;}
   .btn-gold{background:var(--gold);color:var(--felt-dark);border-color:var(--gold);font-weight:600;}
@@ -180,7 +161,7 @@
   .btn-blue:hover{background:rgba(52,152,219,.09);border-color:var(--blue);}
   .btn-blue:disabled{opacity:.28;cursor:not-allowed;}
 
-  /* ── MODALS ── */
+  /* MODALS */
   .overlay{position:fixed;inset:0;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(6px);}
   .modal{background:var(--felt-dark);border:1px solid var(--border);border-radius:14px;padding:28px;max-width:440px;width:92%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.7);}
   .modal h2{font-family:'Playfair Display',serif;font-size:1.8rem;color:var(--gold);margin-bottom:10px;}
@@ -195,22 +176,19 @@
   .modal table th{color:var(--gold);padding:4px 8px;border-bottom:1px solid var(--border);text-align:left;}
   .modal table td{padding:4px 8px;color:rgba(245,240,232,.75);border-bottom:1px solid rgba(201,168,76,.1);}
 
-  /* ── MISC ── */
+  /* MISC */
   @keyframes pfx{0%,100%{background:var(--felt)}50%{background:rgba(231,76,60,.28)}}
   #table-wrap.pf{animation:pfx .5s ease 3;}
   .new-set-btn{align-self:center;padding:4px 10px;font-size:.6rem;}
   #no-sets-msg{color:rgba(201,168,76,.22);font-size:.66rem;padding:16px;width:100%;text-align:center;}
-
-  /* waiting overlay inside game */
   #wait-overlay{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(10,30,18,.6);border-radius:10px;z-index:50;pointer-events:none;}
   #wait-overlay.show{display:flex;}
   #wait-overlay-text{font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--gold);opacity:.7;letter-spacing:.06em;}
-  #table-wrap{position:relative;}
 </style>
 </head>
 <body>
 
-<!-- YOUR TURN RIBBON (left side, persistent while it's your turn) -->
+<!-- YOUR TURN RIBBON -->
 <div id="your-turn-ribbon">
   <div id="your-turn-ribbon-inner">
     <div id="your-turn-emoji">🃏</div>
@@ -219,7 +197,6 @@
 </div>
 
 <div id="app">
-  <!-- HEADER -->
   <div id="header">
     <h1>KonKan <span style="font-size:.7rem;font-family:'DM Mono';color:rgba(201,168,76,.45);font-weight:400;">Online</span></h1>
     <div class="hdr-right">
@@ -232,11 +209,16 @@
   </div>
 
   <div id="game-area">
-    <!-- OPPONENT -->
+    <!-- OPPONENT ROW + DRAW BUTTON -->
     <div id="opp-row">
       <div class="plabel" id="opp-label">Opponent</div>
       <div id="opp-hand"></div>
-      <div id="opp-cnt" style="font-size:.6rem;color:rgba(201,168,76,.5);margin-left:8px;"></div>
+      <div id="opp-cnt"></div>
+      <!-- DRAW DECK lives here -->
+      <div id="draw-area">
+        <div class="dstack" id="deck-btn" onclick="sendDraw()"><div class="dtop"></div></div>
+        <div id="deck-lbl">Draw (<span id="deck-cnt">—</span>)</div>
+      </div>
     </div>
 
     <!-- TABLE -->
@@ -244,15 +226,6 @@
       <div id="tbl-hdr">— TABLE —</div>
       <div id="table-sets"></div>
       <div id="wait-overlay"><div id="wait-overlay-text">Waiting for opponent's move…</div></div>
-    </div>
-
-    <!-- DECK -->
-    <div id="deck-row">
-      <div style="position:relative;">
-        <div class="dstack" id="deck-btn" onclick="sendDraw()"><div class="dtop"></div></div>
-        <div class="dcnt" id="deck-cnt">—</div>
-      </div>
-      <div style="font-size:.6rem;color:rgba(201,168,76,.4);">Draw a card to end your turn</div>
     </div>
 
     <!-- STAGE -->
@@ -264,9 +237,10 @@
     <!-- HAND -->
     <div id="hand-section">
       <div id="hand-lbl">
-        <span>Your Hand <span style="color:rgba(201,168,76,.3);font-size:.5rem;">— drag to reorder</span></span>
+        <span>Your Hand <span style="color:rgba(201,168,76,.3);font-size:.5rem;">— drag to reorder • drag onto table set to add</span></span>
         <span style="display:flex;gap:6px;align-items:center;">
           <button class="btn btn-out" style="padding:2px 8px;font-size:.56rem;" onclick="sortHand()">Sort</button>
+          <button class="btn btn-out" style="padding:2px 8px;font-size:.56rem;" onclick="addHandSpacer()">| Group</button>
           <span id="hand-cnt" style="color:rgba(201,168,76,.5);">—</span>
         </span>
       </div>
@@ -278,25 +252,25 @@
       <button class="btn btn-out"  id="btn-clear"     onclick="clearSel()">Clear</button>
       <button class="btn btn-out"  id="btn-stage"     onclick="stageSelection()">Stage Set</button>
       <button class="btn btn-gold" id="btn-drop"      onclick="sendDrop()" disabled>Drop All</button>
-      <button class="btn btn-blue" id="btn-rearrange" onclick="toggleRearrange()">Rearrange</button>
+      <button class="btn btn-blue" id="btn-rearrange" onclick="toggleRearrange()">Rearrange Table</button>
       <button class="btn btn-red"  id="btn-end"       onclick="endTurnAction()" disabled>End Turn</button>
     </div>
   </div>
 </div>
 
-<!-- LOBBY MODAL -->
+<!-- LOBBY -->
 <div class="overlay" id="modal-lobby">
   <div class="modal">
     <h2>KonKan Online</h2>
     <p id="lobby-msg">Enter your name then share the link below with your opponent.<br>The game starts automatically when both players join.</p>
     <input type="text" id="name-input" placeholder="Your name (e.g. Mom)" maxlength="20">
     <div class="room-link" id="room-link" onclick="copyLink()">—</div>
-    <div class="copy-ok" id="copy-ok">✓ Link copied to clipboard!</div>
+    <div class="copy-ok" id="copy-ok">✓ Link copied!</div>
     <button class="btn btn-gold" style="width:100%;padding:10px;" onclick="confirmName()">Join Game</button>
   </div>
 </div>
 
-<!-- WIN MODAL -->
+<!-- WIN -->
 <div class="overlay" id="modal-win" style="display:none;">
   <div class="modal">
     <h2 id="win-title"></h2>
@@ -306,9 +280,6 @@
 </div>
 
 <script>
-// ═══════════════════════════════════════════════════════════════════════
-//  CONSTANTS & HELPERS
-// ═══════════════════════════════════════════════════════════════════════
 const SUITS=['♠','♥','♦','♣'];
 const RANKS=['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
 const RED=new Set(['♥','♦']);
@@ -339,33 +310,24 @@ function validSet(cards){return isSeqHA(cards)||isGrp(cards);}
 function tableOK(sets){return sets.every(s=>s.length>=3&&validSet(s));}
 function sortSeq(arr){arr.sort((a,b)=>{const av=a.rank==='A'?14:rv(a.rank),bv=b.rank==='A'?14:rv(b.rank);return av-bv;});}
 
-// ═══════════════════════════════════════════════════════════════════════
-//  PARTYKIT CONNECTION
-// ═══════════════════════════════════════════════════════════════════════
-// Room ID from URL hash; generate one if not present
+// ── CONNECTION ────────────────────────────────────────────────────────────────
 function getRoomId(){
   if(location.hash.length>1)return location.hash.slice(1);
   const id=Math.random().toString(36).slice(2,8);
-  location.hash=id;
-  return id;
+  location.hash=id;return id;
 }
-
 const ROOM_ID=getRoomId();
-// ⚠️  Replace YOUR_USERNAME below with your Partykit username after deploying
 const PARTY_HOST=`konkan.gabrieljaghnoun-ux.partykit.dev`;
 const WS_URL=`wss://${PARTY_HOST}/party/${ROOM_ID}`;
 const ROOM_URL=`${location.origin}${location.pathname}#${ROOM_ID}`;
-
 document.getElementById('room-link').textContent=ROOM_URL;
 
 function copyLink(){
   navigator.clipboard.writeText(ROOM_URL).then(()=>{
-    const el=document.getElementById('copy-ok');
-    el.classList.add('show');
+    const el=document.getElementById('copy-ok');el.classList.add('show');
     setTimeout(()=>el.classList.remove('show'),2500);
   });
 }
-
 let ws=null;
 function connect(){
   ws=new WebSocket(WS_URL);
@@ -380,54 +342,29 @@ function setConn(ok){
 }
 function send(msg){if(ws&&ws.readyState===1)ws.send(JSON.stringify(msg));}
 
-// ═══════════════════════════════════════════════════════════════════════
-//  LOCAL STATE
-// ═══════════════════════════════════════════════════════════════════════
-let myId=null;
-let sv=null;        // latest server state
-let myHand=[];      // actual hand cards
-let handOrder=[];   // local order of card ids (drag)
-let selected=[];
-let staged=[];
-let hlSet=null;
-let rearrange=false;
-let rearrangeSnap=null;
-let rearrangeSets=null;
-let picked=null;
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let myId=null,sv=null,myHand=[],handOrder=[],selected=[],staged=[];
+let hlSet=null,rearrange=false,rearrangeSnap=null,rearrangeSets=null,picked=null;
 
+// handOrder can contain card ids OR the string 'SPACER' for visual group separators
 function myTurn(){return sv&&sv.phase==='playing'&&sv.currentTurn===myId;}
 function iMadeDrop(){return sv&&sv.madeDrop&&sv.madeDrop[myId];}
 function oppId(){return sv&&sv.playerOrder.find(id=>id!==myId);}
 function oppName(){const o=oppId();return o&&sv.playerNames[o]||'Opponent';}
-function myName(){return sv&&sv.playerNames[myId]||'You';}
+function getTableSets(){return rearrange?rearrangeSets:(sv?.tableSets||[]);}
 
-function getTableSets(){return rearrange?rearrangeSets:sv?.tableSets||[];}
-
-// ═══════════════════════════════════════════════════════════════════════
-//  SERVER MESSAGE HANDLER
-// ═══════════════════════════════════════════════════════════════════════
-let prevTableLen=0;
-
+// ── SERVER MESSAGES ───────────────────────────────────────────────────────────
 function onMsg(msg){
   if(msg.type!=='state')return;
-  myId=msg.myId;
-  sv=msg.state;
-  // Sync hand
+  myId=msg.myId;sv=msg.state;
   const raw=sv.hands[myId]||[];
   myHand=raw;
   const ids=new Set(raw.map(c=>c.id));
-  handOrder=handOrder.filter(id=>ids.has(id));
+  // Keep spacers, remove stale card ids
+  handOrder=handOrder.filter(id=>id==='SPACER'||ids.has(id));
   for(const c of raw)if(!handOrder.includes(c.id))handOrder.push(c.id);
-
-  // Flash newly dropped sets (indices from server)
-  if(sv.newSetIndices&&sv.newSetIndices.length>0){
-    // Small delay to let render happen first
-    setTimeout(()=>flashSets(sv.newSetIndices),80);
-  }
-  prevTableLen=sv.tableSets.length;
-
-  render();
-  handlePhase();
+  if(sv.newSetIndices&&sv.newSetIndices.length>0)setTimeout(()=>flashSets(sv.newSetIndices),80);
+  render();handlePhase();
 }
 
 function handlePhase(){
@@ -435,16 +372,10 @@ function handlePhase(){
   const lobby=document.getElementById('modal-lobby');
   const win=document.getElementById('modal-win');
   if(sv.phase==='waiting'){
-    lobby.style.display='flex';
-    win.style.display='none';
-    const joined=sv.playerOrder.length;
+    lobby.style.display='flex';win.style.display='none';
     document.getElementById('lobby-msg').textContent=
-      joined<2
-      ?'Share the link below with your opponent — waiting for them to join…'
-      :'Both players connected! Starting soon…';
-  } else {
-    lobby.style.display='none';
-  }
+      sv.playerOrder.length<2?'Share the link with your opponent — waiting for them to join…':'Both players connected! Starting soon…';
+  } else { lobby.style.display='none'; }
   if(sv.phase==='gameover'){
     const won=sv.winner===myId;
     document.getElementById('win-title').textContent=won?'🏆 You Win!':'😔 You Lose';
@@ -456,24 +387,14 @@ function handlePhase(){
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════════
-//  LOBBY
-// ═══════════════════════════════════════════════════════════════════════
-function confirmName(){
-  const name=(document.getElementById('name-input').value||'').trim()||'Player';
-  send({type:'setName',name});
-}
+function confirmName(){send({type:'setName',name:(document.getElementById('name-input').value||'').trim()||'Player'});}
 function sendRestart(){send({type:'restart'});}
 
-// ═══════════════════════════════════════════════════════════════════════
-//  PLAYER ACTIONS → SERVER
-// ═══════════════════════════════════════════════════════════════════════
+// ── ACTIONS ───────────────────────────────────────────────────────────────────
 function sendDraw(){
   if(!myTurn()||rearrange)return;
-  // return staged cards to hand order
   for(const s of staged)for(const c of s)if(!handOrder.includes(c.id))handOrder.push(c.id);
-  staged=[];
-  send({type:'draw'});
+  staged=[];send({type:'draw'});
 }
 
 function sendDrop(){
@@ -487,13 +408,8 @@ function sendAddToSet(cardId,setIndex){
   selected=[];hlSet=null;
 }
 
-function sendRearrangeCommit(newSets){
-  send({type:'rearrange',newSets});
-}
+function sendRearrangeCommit(newSets){send({type:'rearrange',newSets});}
 
-// ═══════════════════════════════════════════════════════════════════════
-//  LOCAL UI ACTIONS
-// ═══════════════════════════════════════════════════════════════════════
 function toggleCard(id){
   if(!myTurn()||rearrange)return;
   if(hlSet!==null){
@@ -536,7 +452,7 @@ function clearSel(){selected=[];hlSet=null;render();}
 function stageSelection(){
   if(selected.length<3)return;
   const cards=selected.map(id=>myHand.find(c=>c.id===id)).filter(Boolean);
-  if(!validSet(cards)){alert('Not a valid set — need a run (same suit, consecutive) or group (same rank, different suits).');return;}
+  if(!validSet(cards)){alert('Not a valid set.');return;}
   if(isSeqHA(cards))sortSeq(cards);
   staged.push([...cards]);
   for(const c of cards)handOrder=handOrder.filter(id=>id!==c.id);
@@ -552,17 +468,22 @@ function sortHand(){
   renderHand();
 }
 
+// Insert a spacer at current selected card position (or at end)
+function addHandSpacer(){
+  if(selected.length===1){
+    const idx=handOrder.indexOf(selected[0]);
+    if(idx!==-1){handOrder.splice(idx,0,'SPACER');selected=[];renderHand();return;}
+  }
+  handOrder.push('SPACER');
+  renderHand();
+}
+
 function endTurnAction(){
   if(!myTurn())return;
   if(rearrange){commitRearrange();return;}
-  // End turn without drawing — only valid if player played something this turn
-  // (server enforces nothing here; button is only enabled after a play)
-  // For now, disabled unless they played — handled in renderStatus
 }
 
-// ═══════════════════════════════════════════════════════════════════════
-//  REARRANGE
-// ═══════════════════════════════════════════════════════════════════════
+// ── REARRANGE ─────────────────────────────────────────────────────────────────
 function toggleRearrange(){
   if(!myTurn()||!iMadeDrop())return;
   if(rearrange)commitRearrange();else enterRearrange();
@@ -573,13 +494,14 @@ function enterRearrange(){
   rearrange=true;hlSet=null;selected=[];picked=null;render();
 }
 function commitRearrange(){
-  if(!tableOK(rearrangeSets)){alert('All sets must have 3+ valid cards.');return;}
+  if(!tableOK(rearrangeSets)){alert('All sets must have 3+ valid cards before committing.');return;}
   sendRearrangeCommit(rearrangeSets);
-  rearrange=false;rearrangeSnap=null;picked=null;render();
+  rearrange=false;rearrangeSnap=null;rearrangeSets=null;picked=null;render();
 }
 function cancelRearrange(){
-  rearrangeSets=null;rearrangeSnap=null;
-  rearrange=false;picked=null;render();
+  // Always restore snapshot — this fixes the stuck bug
+  if(rearrangeSnap){rearrangeSets=rearrangeSnap.map(s=>[...s]);}
+  rearrange=false;rearrangeSnap=null;rearrangeSets=null;picked=null;render();
 }
 function pickCard(si,ci){
   if(!rearrange)return;
@@ -594,7 +516,7 @@ function dropInto(ti){
   if(rearrangeSets[si].length<=3){alert('Set only has 3 cards — cannot remove.');return;}
   rearrangeSets[si]=rearrangeSets[si].filter((_,k)=>k!==ci);
   const ti2=ti>si?ti-1:ti;
-  rearrangeSets[ti2].push(card);
+  if(ti2>=0&&ti2<rearrangeSets.length)rearrangeSets[ti2].push(card);
   picked=null;render();
 }
 function splitNew(){
@@ -606,13 +528,100 @@ function splitNew(){
   picked=null;render();
 }
 
-// ═══════════════════════════════════════════════════════════════════════
-//  RENDER
-// ═══════════════════════════════════════════════════════════════════════
-function render(){
-  renderOpp();renderTable();renderHand();renderStage();renderDeck();renderStatus();
-  renderTurnRibbon();
+// ── DRAG CARD FROM HAND → TABLE SET ──────────────────────────────────────────
+// Separate drag system for dropping hand cards onto table sets.
+// Does NOT end the turn — player can drag multiple cards before drawing.
+const TD={active:false,moved:false,ghost:null,cardId:null,sx:0,sy:0,pc:null,overSet:null};
+
+function tdStart(e,cardId){
+  if(!myTurn()||!iMadeDrop()||rearrange)return;
+  const cx=e.touches?e.touches[0].clientX:e.clientX;
+  const cy=e.touches?e.touches[0].clientY:e.clientY;
+  TD.sx=cx;TD.sy=cy;TD.active=true;TD.moved=false;TD.cardId=cardId;TD.pc=e.currentTarget;TD.overSet=null;
+  document.addEventListener('mousemove',tdMove);
+  document.addEventListener('mouseup',tdEnd);
+  document.addEventListener('touchmove',tdMove,{passive:false});
+  document.addEventListener('touchend',tdEnd);
 }
+
+function tdMove(e){
+  if(!TD.active)return;
+  const cx=e.touches?e.touches[0].clientX:e.clientX;
+  const cy=e.touches?e.touches[0].clientY:e.clientY;
+  if(!TD.moved&&Math.abs(cx-TD.sx)<6&&Math.abs(cy-TD.sy)<6)return;
+  if(e.cancelable)e.preventDefault();
+  if(!TD.moved){
+    TD.moved=true;
+    const src=TD.pc;
+    const gh=src.cloneNode(true);gh.id='drag-ghost';
+    gh.style.cssText=`width:${src.offsetWidth}px;height:${src.offsetHeight}px;position:fixed;pointer-events:none;z-index:9999;transform:rotate(5deg) scale(1.1);box-shadow:6px 14px 32px rgba(0,0,0,.65);animation:none;transition:none;border:2px solid var(--gold);`;
+    const r=src.getBoundingClientRect();gh.style.left=r.left+'px';gh.style.top=r.top+'px';
+    document.body.appendChild(gh);TD.ghost=gh;
+    src.classList.add('dragging-to-table');
+  }
+  TD.ghost.style.left=(cx-TD.pc.offsetWidth/2)+'px';
+  TD.ghost.style.top=(cy-TD.pc.offsetHeight/2)+'px';
+
+  // Highlight the set we're hovering over
+  const sets=[...document.getElementById('table-sets').querySelectorAll('.tset')];
+  let newOver=null;
+  for(let i=0;i<sets.length;i++){
+    const r=sets[i].getBoundingClientRect();
+    if(cx>=r.left&&cx<=r.right&&cy>=r.top&&cy<=r.bottom){newOver=i;break;}
+  }
+  if(newOver!==TD.overSet){
+    // Clear old highlight
+    if(TD.overSet!==null&&sets[TD.overSet]){
+      sets[TD.overSet].classList.remove('card-drag-over','card-drag-invalid');
+    }
+    TD.overSet=newOver;
+    if(newOver!==null){
+      const card=myHand.find(c=>c.id===TD.cardId);
+      const set=getTableSets()[newOver];
+      const fits=card&&set&&([...set,card].some(t=>validSet([...set,card]))||validSet([card,...set]));
+      sets[newOver].classList.add(fits?'card-drag-over':'card-drag-invalid');
+    }
+  }
+}
+
+function tdEnd(e){
+  document.removeEventListener('mousemove',tdMove);document.removeEventListener('mouseup',tdEnd);
+  document.removeEventListener('touchmove',tdMove);document.removeEventListener('touchend',tdEnd);
+  if(!TD.active)return;
+
+  // Clean up ghost & highlight
+  if(TD.ghost){TD.ghost.remove();TD.ghost=null;}
+  if(TD.pc)TD.pc.classList.remove('dragging-to-table');
+  const sets=[...document.getElementById('table-sets').querySelectorAll('.tset')];
+  if(TD.overSet!==null&&sets[TD.overSet]){
+    sets[TD.overSet].classList.remove('card-drag-over','card-drag-invalid');
+  }
+
+  if(TD.moved&&TD.overSet!==null){
+    // Attempt to add card to the hovered set — does NOT end turn
+    const card=myHand.find(c=>c.id===TD.cardId);
+    const si=TD.overSet;
+    const set=getTableSets()[si];
+    if(card&&set){
+      for(const t of[[...set,card],[card,...set]]){
+        if(validSet(t)){
+          handOrder=handOrder.filter(id=>id!==card.id);
+          sendAddToSet(card.id,si);
+          // NOTE: sendAddToSet calls server which ends turn via nextTurn()
+          // To allow multiple drops without ending turn we'd need a server change.
+          // For now each add-to-set is one action (server advances turn).
+          // Multiple free drags within a turn require a "batch add" feature.
+          break;
+        }
+      }
+    }
+  }
+
+  TD.active=false;TD.moved=false;TD.ghost=null;TD.pc=null;TD.cardId=null;TD.overSet=null;
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function render(){renderOpp();renderTable();renderHand();renderStage();renderDeck();renderStatus();renderTurnRibbon();}
 
 function renderOpp(){
   const el=document.getElementById('opp-hand');
@@ -632,13 +641,12 @@ function renderTable(){
   con.innerHTML='';
   wrap.classList.toggle('rmode',rearrange);
   hdr.classList.toggle('rmode',rearrange);
-
   const mt=myTurn();
   wo.classList.toggle('show',!mt&&sv&&sv.phase==='playing');
 
-  if(rearrange) hdr.textContent='— REARRANGE — pick a card, click a set to move it —';
-  else if(!iMadeDrop()) hdr.textContent='— TABLE — drop a set from your hand first —';
-  else hdr.textContent='— TABLE — click a set, then a hand card to add —';
+  if(rearrange)hdr.textContent='— REARRANGE — pick a card, click a set to move —';
+  else if(!iMadeDrop())hdr.textContent='— TABLE — drop a set from your hand first —';
+  else hdr.textContent='— TABLE — drag a hand card onto a set to add it —';
 
   const sets=getTableSets();
   if(sets.length===0){con.innerHTML='<div id="no-sets-msg">No sets on table yet</div>';return;}
@@ -654,10 +662,8 @@ function renderTable(){
 
     if(!rearrange){
       el.onclick=(e)=>{if(e.target===el)clickSet(i);};
-      el.title=iMadeDrop()?'Click to select, then click a hand card to add':'Make your initial drop first';
     } else if(picked&&picked.si!==i){
-      el.onclick=()=>dropInto(i);
-      el.title='Drop picked card here';
+      el.onclick=()=>dropInto(i);el.title='Drop picked card here';
     }
 
     for(let j=0;j<set.length;j++){
@@ -675,7 +681,6 @@ function renderTable(){
         ce.onclick=(e)=>{e.stopPropagation();clickSet(i);};
         ce.oncontextmenu=(e)=>{e.preventDefault();poachCard(i,j);};
         if(set.length>3)ce.classList.add('poach-ok');
-        ce.title=set.length>3?'Click: add hand card | Right-click: poach':'Click: add hand card';
       } else {
         ce.onclick=(e)=>e.stopPropagation();
       }
@@ -685,26 +690,20 @@ function renderTable(){
   }
   if(rearrange&&picked){
     const btn=document.createElement('button');
-    btn.className='btn btn-blue new-set-btn';
-    btn.textContent='+ New Set';
-    btn.onclick=splitNew;
+    btn.className='btn btn-blue new-set-btn';btn.textContent='+ New Set';btn.onclick=splitNew;
     con.appendChild(btn);
   }
 }
 
 function poachCard(si,ci){
   if(!myTurn()||!iMadeDrop()||rearrange)return;
-  const set=getTableSets()[si];
-  if(set.length<=3){flashSetEl(si,'ri');return;}
-  // Can't directly mutate server state — send rearrange with card moved to hand
-  // Actually poaching requires adding to local hand then doing a "rearrange" commit
-  // Simpler: push card into hand locally and send a rearrange that removes it from the set
+  const set=(sv?.tableSets||[])[si];
+  if(!set||set.length<=3){flashSetEl(si,'ri');return;}
   const card=set[ci];
-  const newSets=sv.tableSets.map((s,idx)=>idx===si?s.filter((_,k)=>k!==ci):[...s]).filter(s=>s.length>0);
-  // Temporarily push to hand order for staging
+  const newSets=(sv.tableSets||[]).map((s,idx)=>idx===si?s.filter((_,k)=>k!==ci):[...s]).filter(s=>s.length>0);
   if(!handOrder.includes(card.id))handOrder.push(card.id);
   myHand=[...myHand,card];
-  sv.tableSets=newSets; // optimistic
+  sv.tableSets=newSets;
   render();
 }
 
@@ -714,15 +713,33 @@ function renderHand(){
   const byId=Object.fromEntries(myHand.map(c=>[c.id,c]));
   const stagedIds=new Set(staged.flat().map(c=>c.id));
   for(const id of handOrder){
+    if(id==='SPACER'){
+      const sp=document.createElement('div');
+      sp.className='hand-spacer';
+      sp.title='Click to remove spacer';
+      sp.onclick=()=>{
+        const idx=handOrder.indexOf('SPACER');
+        if(idx!==-1){handOrder.splice(idx,1);renderHand();}
+      };
+      con.appendChild(sp);
+      continue;
+    }
     const c=byId[id];
     if(!c||stagedIds.has(id))continue;
     const sel=selected.includes(id);
     const el=mkCard(c,true,sel);
     el.classList.add('hc');
     el.dataset.id=id;
-    el.onclick=(e)=>{if(DR.moved)return;toggleCard(id);};
-    el.addEventListener('mousedown',drStart);
-    el.addEventListener('touchstart',drStart,{passive:false});
+    el.onclick=(e)=>{if(DR.moved||TD.moved)return;toggleCard(id);};
+    // Both drag systems listen — DR for reorder, TD for drop-to-table
+    el.addEventListener('mousedown',(e)=>{
+      // We delay deciding which drag to use until movement direction is known
+      drStart(e);
+      tdStart(e,id);
+    });
+    el.addEventListener('touchstart',(e)=>{
+      drStart(e);tdStart(e,id);
+    },{passive:false});
     con.appendChild(el);
   }
   document.getElementById('hand-cnt').textContent=`${myHand.length} cards`;
@@ -762,13 +779,9 @@ function renderStatus(){
   const bRear=document.getElementById('btn-rearrange');
   const bEnd=document.getElementById('btn-end');
 
-  if(!sv||sv.phase==='waiting'){
-    tp.textContent='Waiting for opponent…';tp.style.color='rgba(245,240,232,.4)';
-  } else if(mt){
-    tp.textContent='Your Turn ✦';tp.style.color='var(--gold)';
-  } else {
-    tp.textContent=`${oppName()}'s Turn`;tp.style.color='#e74c3c';
-  }
+  if(!sv||sv.phase==='waiting'){tp.textContent='Waiting…';tp.style.color='rgba(245,240,232,.4)';}
+  else if(mt){tp.textContent='Your Turn ✦';tp.style.color='var(--gold)';}
+  else{tp.textContent=`${oppName()}'s Turn`;tp.style.color='#e74c3c';}
 
   bl.classList.toggle('show',mt&&!iMadeDrop()&&getTableSets().length===0&&staged.length===0);
   br.classList.toggle('show',rearrange);
@@ -776,13 +789,10 @@ function renderStatus(){
   if(rearrange){
     bRear.textContent='Commit Rearrange';bRear.className='btn btn-gold';
     bEnd.textContent='Cancel Rearrange';bEnd.disabled=false;
-    bDrop.disabled=staged.length===0;
-    bStage.disabled=selected.length<3;
+    bDrop.disabled=staged.length===0;bStage.disabled=selected.length<3;
   } else {
-    bRear.textContent='Rearrange';bRear.className='btn btn-blue';
-    bEnd.textContent='End Turn';
-    // End Turn only useful after rearrange; draw button is the normal end
-    bEnd.disabled=true; // hide this path for now — draw ends turn
+    bRear.textContent='Rearrange Table';bRear.className='btn btn-blue';
+    bEnd.textContent='End Turn';bEnd.disabled=true;
     bDrop.disabled=staged.length===0||!mt;
     bStage.disabled=selected.length<3||!mt;
     bRear.disabled=!mt||!iMadeDrop()||getTableSets().length===0;
@@ -792,121 +802,26 @@ function renderStatus(){
 }
 
 function renderTurnRibbon(){
-  const mt=myTurn();
-  const ribbon=document.getElementById('your-turn-ribbon');
-  ribbon.classList.toggle('show',!!mt);
+  document.getElementById('your-turn-ribbon').classList.toggle('show',!!myTurn());
 }
 
-// ═══════════════════════════════════════════════════════════════════════
-//  FLASH UTILITIES
-// ═══════════════════════════════════════════════════════════════════════
+// ── FLASH ─────────────────────────────────────────────────────────────────────
 function flashSets(indices){
   const els=document.getElementById('table-sets').querySelectorAll('.tset');
   indices.forEach(i=>{
     const el=els[i];if(!el)return;
-    el.classList.remove('just-dropped');
-    void el.offsetWidth;
+    el.classList.remove('just-dropped');void el.offsetWidth;
     el.classList.add('just-dropped');
     setTimeout(()=>el&&el.classList.remove('just-dropped'),2100);
   });
 }
-
 const _ft={};
 function flashSetEl(si,cls){
   const els=document.getElementById('table-sets').children;
-  if(els[si]){
-    els[si].classList.add(cls);
-    clearTimeout(_ft[si]);
-    _ft[si]=setTimeout(()=>{if(els[si])els[si].classList.remove(cls);},750);
-  }
+  if(els[si]){els[si].classList.add(cls);clearTimeout(_ft[si]);_ft[si]=setTimeout(()=>{if(els[si])els[si].classList.remove(cls);},750);}
 }
 
-// ═══════════════════════════════════════════════════════════════════════
-//  FACE CARD SVG ART  (K / Q / J with emoji sketches)
-// ═══════════════════════════════════════════════════════════════════════
-const FACE_ART={
-  K:(col,suit)=>`<svg viewBox="0 0 52 70" xmlns="http://www.w3.org/2000/svg">
-    <!-- Crown -->
-    <polygon points="6,30 14,15 26,23 38,15 46,30 40,32 26,26 12,32" fill="${col}" opacity=".92"/>
-    <circle cx="6" cy="30" r="3" fill="${col}"/>
-    <circle cx="26" cy="23" r="3" fill="${col}"/>
-    <circle cx="46" cy="30" r="3" fill="${col}"/>
-    <!-- Robe -->
-    <rect x="14" y="32" width="24" height="26" rx="3" fill="${col}" opacity=".14"/>
-    <line x1="26" y1="32" x2="26" y2="58" stroke="${col}" stroke-width="1.5" opacity=".35"/>
-    <!-- Sword diagonal -->
-    <line x1="17" y1="37" x2="35" y2="55" stroke="${col}" stroke-width="2.5" stroke-linecap="round"/>
-    <line x1="15" y1="46" x2="37" y2="46" stroke="${col}" stroke-width="1.5" stroke-linecap="round" opacity=".55"/>
-    <!-- Face -->
-    <circle cx="26" cy="20" r="7.5" fill="#f9edd8" stroke="${col}" stroke-width="1"/>
-    <ellipse cx="23" cy="18.5" rx="1.3" ry="1.5" fill="${col}"/>
-    <ellipse cx="29" cy="18.5" rx="1.3" ry="1.5" fill="${col}"/>
-    <path d="M22.5 22.5 Q26 25 29.5 22.5" stroke="${col}" stroke-width="1" fill="none" stroke-linecap="round"/>
-    <!-- Mustache -->
-    <path d="M23 20.5 Q24.5 19.5 26 20.5 Q27.5 19.5 29 20.5" stroke="${col}" stroke-width=".8" fill="none" opacity=".6"/>
-    <!-- Suit watermark -->
-    <text x="26" y="62" text-anchor="middle" font-size="12" fill="${col}" opacity=".18" font-family="serif">${suit}</text>
-  </svg>`,
-
-  Q:(col,suit)=>`<svg viewBox="0 0 52 70" xmlns="http://www.w3.org/2000/svg">
-    <!-- Hair arc -->
-    <ellipse cx="26" cy="14" rx="13" ry="6" fill="${col}" opacity=".28"/>
-    <!-- Tiara -->
-    <rect x="18" y="10" width="16" height="5" rx="2.5" fill="${col}" opacity=".75"/>
-    <circle cx="18" cy="10" r="2.8" fill="${col}"/>
-    <circle cx="26" cy="7.5" r="2.8" fill="${col}"/>
-    <circle cx="34" cy="10" r="2.8" fill="${col}"/>
-    <!-- Star on tiara -->
-    <text x="26" y="13.5" text-anchor="middle" font-size="5" fill="#fff" opacity=".9">★</text>
-    <!-- Gown -->
-    <path d="M13 44 Q9 64 26 66 Q43 64 39 44 Z" fill="${col}" opacity=".16"/>
-    <path d="M16 40 Q13 52 26 55 Q39 52 36 40 Z" fill="${col}" opacity=".26"/>
-    <!-- Rose -->
-    <circle cx="26" cy="40" r="4.5" fill="${col}" opacity=".38"/>
-    <circle cx="26" cy="40" r="2.2" fill="${col}" opacity=".85"/>
-    <circle cx="26" cy="40" r=".8" fill="#fff" opacity=".5"/>
-    <!-- Face -->
-    <circle cx="26" cy="22" r="8" fill="#f9edd8" stroke="${col}" stroke-width="1"/>
-    <ellipse cx="23" cy="20.5" rx="1.2" ry="1.4" fill="${col}"/>
-    <ellipse cx="29" cy="20.5" rx="1.2" ry="1.4" fill="${col}"/>
-    <path d="M23 24.5 Q26 27 29 24.5" stroke="${col}" stroke-width="1" fill="none" stroke-linecap="round"/>
-    <!-- Cheeks -->
-    <circle cx="21" cy="23" r="2" fill="#ffb3c1" opacity=".35"/>
-    <circle cx="31" cy="23" r="2" fill="#ffb3c1" opacity=".35"/>
-    <!-- Suit watermark -->
-    <text x="26" y="64" text-anchor="middle" font-size="12" fill="${col}" opacity=".18" font-family="serif">${suit}</text>
-  </svg>`,
-
-  J:(col,suit)=>`<svg viewBox="0 0 52 70" xmlns="http://www.w3.org/2000/svg">
-    <!-- Hat brim -->
-    <rect x="13" y="10" width="26" height="4.5" rx="2.5" fill="${col}" opacity=".82"/>
-    <!-- Hat top -->
-    <rect x="19" y="3" width="14" height="10" rx="2.5" fill="${col}" opacity=".72"/>
-    <!-- Hat band -->
-    <rect x="19" y="10" width="14" height="2.5" rx="1" fill="${col}" opacity=".4"/>
-    <!-- Feather -->
-    <path d="M33 5 Q42 0 39 14 Q35 10 33 5" fill="${col}" opacity=".48"/>
-    <path d="M36 6 Q40 3 38 12" stroke="${col}" stroke-width=".8" fill="none" opacity=".6"/>
-    <!-- Tunic -->
-    <rect x="16" y="38" width="20" height="20" rx="3" fill="${col}" opacity=".15"/>
-    <!-- Belt -->
-    <rect x="14" y="46" width="24" height="3.5" rx="1.5" fill="${col}" opacity=".38"/>
-    <!-- Buckle -->
-    <rect x="23" y="46.5" width="6" height="2.5" rx="1" fill="${col}" opacity=".6"/>
-    <!-- Sceptre -->
-    <line x1="35" y1="32" x2="35" y2="58" stroke="${col}" stroke-width="2.2" stroke-linecap="round"/>
-    <circle cx="35" cy="30" r="3.2" fill="${col}" opacity=".72"/>
-    <circle cx="35" cy="30" r="1.5" fill="#fff" opacity=".4"/>
-    <!-- Face -->
-    <circle cx="26" cy="24" r="8" fill="#f9edd8" stroke="${col}" stroke-width="1"/>
-    <ellipse cx="23" cy="22.5" rx="1.2" ry="1.4" fill="${col}"/>
-    <ellipse cx="29" cy="22.5" rx="1.2" ry="1.4" fill="${col}"/>
-    <path d="M23 26.5 Q26 29 29 26.5" stroke="${col}" stroke-width="1" fill="none" stroke-linecap="round"/>
-    <!-- Suit watermark -->
-    <text x="26" y="64" text-anchor="middle" font-size="12" fill="${col}" opacity=".18" font-family="serif">${suit}</text>
-  </svg>`
-};
-
+// ── CARD BUILDER ─────────────────────────────────────────────────────────────
 function mkCard(card,_i,sel,ani){
   const el=document.createElement('div');
   const isRed=RED.has(card.suit);
@@ -914,34 +829,24 @@ function mkCard(card,_i,sel,ani){
   el.dataset.id=card.id;
   const col=isRed?'#cc0000':'#111';
 
+  // Top-left: big rank + suit
   const top=document.createElement('div');top.className='card-top';
   const tr=document.createElement('div');tr.className='cr';tr.textContent=card.rank;
   const ts=document.createElement('div');ts.className='cs-sm';ts.textContent=card.suit;
   top.append(tr,ts);
 
+  // Centre: faint watermark suit
   const mid=document.createElement('div');mid.className='card-mid';
-  if(['K','Q','J'].includes(card.rank)){
-    const fa=document.createElement('div');fa.className='face-art';
-    fa.innerHTML=FACE_ART[card.rank](col,card.suit);
-    mid.appendChild(fa);
-  } else {
-    const pip=document.createElement('div');pip.className='pip';
-    pip.textContent=card.suit;pip.style.color=col;
-    mid.appendChild(pip);
-  }
+  const pip=document.createElement('div');pip.className='pip';
+  pip.textContent=card.suit;pip.style.color=col;
+  mid.appendChild(pip);
 
-  const bot=document.createElement('div');bot.className='card-bot';
-  const br=document.createElement('div');br.className='crb';br.textContent=card.rank;
-  const bs=document.createElement('div');bs.className='csb';bs.textContent=card.suit;
-  bot.append(br,bs);
-
-  el.append(top,mid,bot);
+  el.append(top,mid);
   return el;
 }
 
-// ═══════════════════════════════════════════════════════════════════════
-//  DRAG-REORDER HAND
-// ═══════════════════════════════════════════════════════════════════════
+// ── DRAG REORDER HAND (DR) ────────────────────────────────────────────────────
+// Works in parallel with TD; whichever moves first "wins"
 const DR={active:false,moved:false,ghost:null,si:null,di:null,sx:0,sy:0,pc:null};
 
 function drStart(e){
@@ -950,19 +855,32 @@ function drStart(e){
   const cx=e.touches?e.touches[0].clientX:e.clientX;
   const cy=e.touches?e.touches[0].clientY:e.clientY;
   DR.sx=cx;DR.sy=cy;DR.active=true;DR.moved=false;
-  DR.si=handOrder.indexOf(id);DR.di=DR.si;DR.pc=card;
+  DR.si=handOrder.filter(x=>x!=='SPACER').indexOf(id);
+  // map to actual handOrder index
+  let count=0,hoIdx=0;
+  for(let i=0;i<handOrder.length;i++){
+    if(handOrder[i]===id){hoIdx=i;break;}
+  }
+  DR.si=hoIdx;DR.di=hoIdx;DR.pc=card;
   document.addEventListener('mousemove',drMove);
   document.addEventListener('mouseup',drEnd);
   document.addEventListener('touchmove',drMove,{passive:false});
   document.addEventListener('touchend',drEnd);
 }
+
 function drMove(e){
   if(!DR.active)return;
   const cx=e.touches?e.touches[0].clientX:e.clientX;
   const cy=e.touches?e.touches[0].clientY:e.clientY;
   if(!DR.moved&&Math.abs(cx-DR.sx)<5&&Math.abs(cy-DR.sy)<5)return;
+  // If TD already went active, abort DR
+  if(TD.moved){drCancel();return;}
   if(e.cancelable)e.preventDefault();
   if(!DR.moved){
+    // Cancel TD
+    if(TD.ghost){TD.ghost.remove();TD.ghost=null;}
+    if(TD.pc)TD.pc.classList.remove('dragging-to-table');
+    TD.active=false;TD.moved=false;
     DR.moved=true;
     const src=DR.pc;const gh=src.cloneNode(true);gh.id='drag-ghost';
     gh.style.cssText=`width:${src.offsetWidth}px;height:${src.offsetHeight}px;position:fixed;pointer-events:none;z-index:9999;transform:rotate(4deg) scale(1.07);box-shadow:4px 12px 28px rgba(0,0,0,.6);animation:none;transition:none;`;
@@ -974,14 +892,17 @@ function drMove(e){
   const con=document.getElementById('player-hand');
   const cards=[...con.querySelectorAll('.hc')];
   let nd=handOrder.length;
-  for(let i=0;i<cards.length;i++){const cr=cards[i].getBoundingClientRect();if(cx<cr.left+32){nd=i;break;}}
+  for(let i=0;i<cards.length;i++){const cr=cards[i].getBoundingClientRect();if(cx<cr.left+32){
+    nd=parseInt(cards[i].dataset.hoIdx||i);break;
+  }}
   if(nd!==DR.di){
     DR.di=nd;
     const old=document.getElementById('drop-ind');if(old)old.remove();
     const ind=document.createElement('div');ind.id='drop-ind';ind.className='drop-ind';
-    if(nd>=cards.length)con.appendChild(ind);else con.insertBefore(ind,cards[nd]);
+    if(nd>=cards.length)con.appendChild(ind);else con.insertBefore(ind,cards[Math.min(nd,cards.length-1)]);
   }
 }
+
 function drEnd(){
   document.removeEventListener('mousemove',drMove);document.removeEventListener('mouseup',drEnd);
   document.removeEventListener('touchmove',drMove);document.removeEventListener('touchend',drEnd);
@@ -989,19 +910,31 @@ function drEnd(){
   if(DR.moved&&DR.ghost){
     DR.ghost.remove();DR.ghost=null;
     if(DR.pc)DR.pc.classList.remove('dragging');
-    const f=DR.si,t=DR.di;
-    if(f!==t&&f!==t-1){const id=handOrder.splice(f,1)[0];handOrder.splice(t>f?t-1:t,0,id);}
+    // Reorder handOrder by visual card positions
+    const con=document.getElementById('player-hand');
+    const cards=[...con.querySelectorAll('.hc')];
+    // Get the id of card being dragged
+    const dragId=DR.pc.dataset.id;
+    // Find where to insert based on drop position
+    const f=handOrder.indexOf(dragId);
+    const t=DR.di;
+    if(f!==-1&&f!==t&&f!==t-1){
+      handOrder.splice(f,1);
+      handOrder.splice(t>f?t-1:t,0,dragId);
+    }
     const old=document.getElementById('drop-ind');if(old)old.remove();
     renderHand();
   }
   DR.active=false;DR.moved=false;DR.ghost=null;DR.pc=null;DR.si=null;DR.di=null;
 }
 
-// ═══════════════════════════════════════════════════════════════════════
-//  START
-// ═══════════════════════════════════════════════════════════════════════
-connect();
-render();
+function drCancel(){
+  document.removeEventListener('mousemove',drMove);document.removeEventListener('mouseup',drEnd);
+  document.removeEventListener('touchmove',drMove);document.removeEventListener('touchend',drEnd);
+  DR.active=false;DR.moved=false;
+}
+
+connect();render();
 </script>
 </body>
 </html>
