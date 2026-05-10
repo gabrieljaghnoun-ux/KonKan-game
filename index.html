@@ -266,11 +266,13 @@
 <div class="overlay" id="modal-lobby">
   <div class="modal">
     <h2>KonKan Online</h2>
-    <p id="lobby-msg">Enter your name then share the link below with your opponent.<br>The game starts automatically when both players join.</p>
-    <input type="text" id="name-input" placeholder="Your name (e.g. Mom)" maxlength="20">
-    <div class="room-link" id="room-link" onclick="copyLink()">—</div>
-    <div class="copy-ok" id="copy-ok">✓ Link copied!</div>
-    <button class="btn btn-gold" style="width:100%;padding:10px;" onclick="confirmName()">Join Game</button>
+    <p id="lobby-msg" style="margin-bottom:6px;">Enter your name, then click <strong>Join</strong>.<br>Send the link below to your opponent — when she opens it, the game starts!</p>
+    <input type="text" id="name-input" placeholder="Your name" maxlength="20" style="margin-bottom:8px;">
+    <div style="font-size:.58rem;color:rgba(201,168,76,.55);margin-bottom:4px;letter-spacing:.06em;">📎 YOUR GAME LINK — send this to your opponent:</div>
+    <div class="room-link" id="room-link" onclick="copyLink()" title="Click to copy">—</div>
+    <div class="copy-ok" id="copy-ok">✓ Copied to clipboard!</div>
+    <button class="btn btn-gold" style="width:100%;padding:10px;margin-bottom:8px;" onclick="confirmName()">Join Game</button>
+    <p style="font-size:.6rem;color:rgba(245,240,232,.35);margin-bottom:0;line-height:1.6;">Both players must open <em>the same link</em>.<br>The game starts automatically once both players click Join.</p>
   </div>
 </div>
 
@@ -315,36 +317,51 @@ function tableOK(sets){return sets.every(s=>s.length>=3&&validSet(s));}
 function sortSeq(arr){arr.sort((a,b)=>{const av=a.rank==='A'?14:rv(a.rank),bv=b.rank==='A'?14:rv(b.rank);return av-bv;});}
 
 // ── CONNECTION ────────────────────────────────────────────────────────────────
+// Partykit server (deployed separately — see README)
+const PARTY_HOST = 'konkan.gabrieljaghnoun-ux.partykit.dev';
+
+// Room ID comes from the URL hash.
+// Player 1 gets a new random room, shares the full URL.
+// Player 2 opens that same URL → same hash → same room → game starts.
 function getRoomId(){
-  if(location.hash.length>1)return location.hash.slice(1);
-  const id=Math.random().toString(36).slice(2,8);
-  location.hash=id;return id;
+  if(location.hash.length>1) return location.hash.slice(1);
+  const id = Math.random().toString(36).slice(2,8);
+  location.hash = '#' + id;
+  return id;
 }
-const ROOM_ID=getRoomId();
-const PARTY_HOST=`konkan.gabrieljaghnoun-ux.partykit.dev`;
-const WS_URL=`wss://${PARTY_HOST}/party/${ROOM_ID}`;
-const ROOM_URL=`${location.origin}${location.pathname}#${ROOM_ID}`;
-document.getElementById('room-link').textContent=ROOM_URL;
+
+const ROOM_ID  = getRoomId();
+const WS_URL   = `wss://${PARTY_HOST}/party/${ROOM_ID}`;
+// Full shareable URL — includes the room hash so mom joins the same game
+const ROOM_URL = location.href; // e.g. https://gabrieljaghnoun-ux.github.io/KonKan-game/#v498ne
+
+// Show link immediately so player 1 can copy it right away
+document.getElementById('room-link').textContent = ROOM_URL;
 
 function copyLink(){
   navigator.clipboard.writeText(ROOM_URL).then(()=>{
-    const el=document.getElementById('copy-ok');el.classList.add('show');
+    const el=document.getElementById('copy-ok');
+    el.classList.add('show');
     setTimeout(()=>el.classList.remove('show'),2500);
+  }).catch(()=>{
+    // Fallback for browsers that block clipboard without https
+    prompt('Copy this link and send it to your opponent:',ROOM_URL);
   });
 }
+
 let ws=null;
 function connect(){
   ws=new WebSocket(WS_URL);
-  ws.onopen=()=>setConn(true);
-  ws.onclose=()=>{setConn(false);setTimeout(connect,2000);}
-  ws.onerror=()=>setConn(false);
-  ws.onmessage=e=>onMsg(JSON.parse(e.data));
+  ws.onopen  = ()=>setConn(true);
+  ws.onclose = ()=>{ setConn(false); setTimeout(connect,2000); };
+  ws.onerror = ()=>setConn(false);
+  ws.onmessage = e=>onMsg(JSON.parse(e.data));
 }
 function setConn(ok){
   document.getElementById('conn-dot').classList.toggle('ok',ok);
-  document.getElementById('conn-lbl').textContent=ok?'Connected':'Reconnecting…';
+  document.getElementById('conn-lbl').textContent = ok?'Connected':'Reconnecting…';
 }
-function send(msg){if(ws&&ws.readyState===1)ws.send(JSON.stringify(msg));}
+function send(msg){ if(ws&&ws.readyState===1) ws.send(JSON.stringify(msg)); }
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
 let myId=null,sv=null,myHand=[],handOrder=[],selected=[],staged=[];
