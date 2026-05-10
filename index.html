@@ -177,8 +177,15 @@
   .modal table td{padding:4px 8px;color:rgba(245,240,232,.75);border-bottom:1px solid rgba(201,168,76,.1);}
 
   /* MISC */
-  /* rearrange hand-pull panel inside table */
-  #table-sets .pull-hand-panel{display:flex;flex-wrap:wrap;gap:4px;align-items:flex-end;border:1px dashed rgba(201,168,76,.3);border-radius:6px;padding:5px 7px;align-self:center;}
+  /* rearrange: selected card glows orange */
+  .card.rsel{transform:translateY(-18px)!important;border-color:#e67e22!important;box-shadow:0 0 0 2.5px #e67e22,0 8px 20px rgba(0,0,0,.4)!important;z-index:202!important;}
+  /* rearrange: table set that can receive the selected card */
+  .tset.rmode-target{border-color:#e67e22;box-shadow:0 0 12px rgba(230,126,34,.5);cursor:pointer;}
+  /* rearrange: invalid drop target */
+  .tset.rmode-invalid{border-color:#e74c3c;box-shadow:0 0 8px rgba(231,76,60,.35);}
+  /* rearrange: sets with <3 or invalid cards show red */
+  .tset.rmode-bad{border-color:#e74c3c;box-shadow:0 0 8px rgba(231,76,60,.3);}
+  .tset.rmode-ok{border-color:var(--green);box-shadow:0 0 6px rgba(46,204,113,.25);}
   @keyframes pfx{0%,100%{background:var(--felt)}50%{background:rgba(231,76,60,.28)}}
   #table-wrap.pf{animation:pfx .5s ease 3;}
   .new-set-btn{align-self:center;padding:4px 10px;font-size:.6rem;}
@@ -365,9 +372,14 @@ function send(msg){ if(ws&&ws.readyState===1) ws.send(JSON.stringify(msg)); }
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
 let myId=null,sv=null,myHand=[],handOrder=[],selected=[],staged=[];
-let hlSet=null,rearrange=false,rearrangeSnap=null,rearrangeSets=null,picked=null;
-// Cards pulled from hand into rearrange (so we can return them on cancel)
-let rearrangeHandCards=[]; // array of card objects temporarily moved from hand to table
+let hlSet=null;
+// ── REARRANGE STATE ───────────────────────────────────────────────────────────
+let rearrange=false;
+let rSnap=null;        // deep snapshot of table taken when entering rearrange
+let rSets=null;        // live working copy of table during rearrange
+let rHandSnap=null;    // snapshot of handOrder taken when entering rearrange
+let rHandCards=null;   // snapshot of myHand taken when entering rearrange
+let rSel=null;         // currently selected card: {id, suit, rank, src:'hand'|'table', si, ci}
 
 // handOrder can contain card ids OR the string 'SPACER' for visual group separators
 function myTurn(){return sv&&sv.phase==='playing'&&sv.currentTurn===myId;}
@@ -507,191 +519,99 @@ function endTurnAction(){
 }
 
 // ── REARRANGE ─────────────────────────────────────────────────────────────────
+// ── REARRANGE MODE ───────────────────────────────────────────────────────────
+// How it works:
+//   1. Click "Rearrange Table" to enter.
+//   2. Click ANY card (from your hand OR from a table set) to select it (glows orange).
+//   3. Click a table set to drop the selected card into it.
+//   4. Click the selected card again to deselect.
+//   5. Click "↺ Reset" to undo everything back to the start.
+//   6. Click "✓ Commit" when all sets on the table are valid (≥3 cards each).
+//   Committing sends the new table to the server and does NOT end your turn —
+//   you still need to draw or drop to end your turn.
+
 function toggleRearrange(){
   if(!myTurn()||!iMadeDrop())return;
-  if(rearrange)commitRearrange();else enterRearrange();
+  if(rearrange) commitRearrange(); else enterRearrange();
 }
 
 function enterRearrange(){
-  rearrangeSnap=(sv?.tableSets||[]).map(s=>[...s]);
-  rearrangeSets=rearrangeSnap.map(s=>[...s]);
-  rearrangeHandCards=[];
-  rearrange=true;hlSet=null;selected=[];picked=null;render();
+  // Deep-copy everything so reset is always possible
+  rSnap      = (sv?.tableSets||[]).map(s=>s.map(c=>({...c})));
+  rSets      = (sv?.tableSets||[]).map(s=>s.map(c=>({...c})));
+  rHandSnap  = [...handOrder];
+  rHandCards = myHand.map(c=>({...c}));
+  rSel       = null;
+  rearrange  = true;
+  hlSet      = null; selected = [];
+  render();
+}
+
+function resetRearrange(){
+  // Restore table AND hand to exactly what they were when Rearrange was clicked
+  rSets     = rSnap.map(s=>s.map(c=>({...c})));
+  myHand    = rHandCards.map(c=>({...c}));
+  handOrder = [...rHandSnap];
+  rSel      = null;
+  render();
+}
+
+function cancelRearrange(){
+  resetRearrange();
+  rearrange = false;
+  rSnap=null; rSets=null; rHandSnap=null; rHandCards=null; rSel=null;
+  render();
 }
 
 function commitRearrange(){
-  // Every set must have ≥3 valid cards
-  if(!tableOK(rearrangeSets)){
-    alert('Cannot commit: every set on the table must have at least 3 valid cards. Fix the red sets or click ↺ Reset Table.');
+  if(!tableOK(rSets)){
+    alert('Cannot commit: every set must have at least 3 valid cards. Red sets need fixing. Click ↺ Reset to undo.');
     return;
   }
-  sendRearrangeCommit(rearrangeSets);
-  rearrange=false;rearrangeSnap=null;rearrangeSets=null;rearrangeHandCards=[];picked=null;render();
+  sendRearrangeCommit(rSets);
+  rearrange = false;
+  rSnap=null; rSets=null; rHandSnap=null; rHandCards=null; rSel=null;
+  render();
 }
 
-// Reset table to exactly what it was when Rearrange was clicked — never gets stuck
-function resetRearrange(){
-  if(!rearrangeSnap)return;
-  rearrangeSets=rearrangeSnap.map(s=>[...s]);
-  // Return any hand cards that were moved into the table back to hand
-  for(const c of rearrangeHandCards){
-    if(!myHand.find(x=>x.id===c.id)){
-      myHand.push(c);
-      if(!handOrder.includes(c.id))handOrder.push(c.id);
-    }
-  }
-  rearrangeHandCards=[];
-  picked=null;render();
+// Click a card in rearrange mode (from hand OR table)
+// src: 'hand' or 'table'
+function rSelectCard(card, src, si, ci){
+  // Clicking the already-selected card → deselect
+  if(rSel && rSel.id===card.id){ rSel=null; render(); return; }
+  rSel = {id:card.id, suit:card.suit, rank:card.rank, src, si, ci, card};
+  render();
 }
 
-// Cancel = reset + exit rearrange
-function cancelRearrange(){
-  resetRearrange();
-  rearrange=false;rearrangeSnap=null;rearrangeSets=null;rearrangeHandCards=[];picked=null;render();
-}
+// Click a table set in rearrange mode → drop selected card into it
+function rDropIntoSet(ti){
+  if(!rSel) return;
+  const card = rSel.card;
+  const src  = rSel.src;
 
-// Pick a card from ANY table set (no minimum check here — enforced at commit)
-function pickCard(si,ci){
-  if(!rearrange)return;
-  // Clicking the already-picked card deselects it
-  if(picked&&picked.si===si&&picked.ci===ci){picked=null;render();return;}
-  picked={si,ci,card:rearrangeSets[si][ci]};render();
-}
-
-// Drop picked card into another set
-function dropInto(ti){
-  if(!rearrange||!picked)return;
-  const{si,ci,card}=picked;
-  if(ti===si){picked=null;render();return;}
-  // Remove from source
-  rearrangeSets[si]=rearrangeSets[si].filter((_,k)=>k!==ci);
-  // Remove empty sets but track the adjusted target index
-  const srcEmpty=rearrangeSets[si].length===0;
-  if(srcEmpty)rearrangeSets.splice(si,1);
-  // Recalculate target index after potential splice
-  let ti2=srcEmpty&&ti>si?ti-1:ti;
-  ti2=Math.max(0,Math.min(ti2,rearrangeSets.length-1));
-  rearrangeSets[ti2].push(card);
-  picked=null;render();
-}
-
-// Split picked card into its own new set (for building a new group/sequence)
-function splitNew(){
-  if(!rearrange||!picked)return;
-  const{si,ci,card}=picked;
-  rearrangeSets[si]=rearrangeSets[si].filter((_,k)=>k!==ci);
-  if(rearrangeSets[si].length===0)rearrangeSets.splice(si,1);
-  rearrangeSets.push([card]);
-  picked=null;render();
-}
-
-// Pull a card from your hand into the rearrange (adds it to a temp set)
-function pullHandCardIntoRearrange(cardId){
-  if(!rearrange)return;
-  const card=myHand.find(c=>c.id===cardId);
-  if(!card)return;
-  // If there's a picked table card, try to merge them into the same new set
-  rearrangeHandCards.push(card);
-  myHand=myHand.filter(c=>c.id!==cardId);
-  handOrder=handOrder.filter(id=>id!==cardId);
-  // Create a new 1-card set — player can then move it via rearrange UI
-  rearrangeSets.push([card]);
-  picked=null;render();
-}
-
-// ── DRAG CARD FROM HAND → TABLE SET ──────────────────────────────────────────
-// Separate drag system for dropping hand cards onto table sets.
-// Does NOT end the turn — player can drag multiple cards before drawing.
-const TD={active:false,moved:false,ghost:null,cardId:null,sx:0,sy:0,pc:null,overSet:null};
-
-function tdStart(e,cardId){
-  if(!myTurn()||!iMadeDrop()||rearrange)return;
-  const cx=e.touches?e.touches[0].clientX:e.clientX;
-  const cy=e.touches?e.touches[0].clientY:e.clientY;
-  TD.sx=cx;TD.sy=cy;TD.active=true;TD.moved=false;TD.cardId=cardId;TD.pc=e.currentTarget;TD.overSet=null;
-  document.addEventListener('mousemove',tdMove);
-  document.addEventListener('mouseup',tdEnd);
-  document.addEventListener('touchmove',tdMove,{passive:false});
-  document.addEventListener('touchend',tdEnd);
-}
-
-function tdMove(e){
-  if(!TD.active)return;
-  const cx=e.touches?e.touches[0].clientX:e.clientX;
-  const cy=e.touches?e.touches[0].clientY:e.clientY;
-  if(!TD.moved&&Math.abs(cx-TD.sx)<6&&Math.abs(cy-TD.sy)<6)return;
-  if(e.cancelable)e.preventDefault();
-  if(!TD.moved){
-    TD.moved=true;
-    const src=TD.pc;
-    const gh=src.cloneNode(true);gh.id='drag-ghost';
-    gh.style.cssText=`width:${src.offsetWidth}px;height:${src.offsetHeight}px;position:fixed;pointer-events:none;z-index:9999;transform:rotate(5deg) scale(1.1);box-shadow:6px 14px 32px rgba(0,0,0,.65);animation:none;transition:none;border:2px solid var(--gold);`;
-    const r=src.getBoundingClientRect();gh.style.left=r.left+'px';gh.style.top=r.top+'px';
-    document.body.appendChild(gh);TD.ghost=gh;
-    src.classList.add('dragging-to-table');
-  }
-  TD.ghost.style.left=(cx-TD.pc.offsetWidth/2)+'px';
-  TD.ghost.style.top=(cy-TD.pc.offsetHeight/2)+'px';
-
-  // Highlight the set we're hovering over
-  const sets=[...document.getElementById('table-sets').querySelectorAll('.tset')];
-  let newOver=null;
-  for(let i=0;i<sets.length;i++){
-    const r=sets[i].getBoundingClientRect();
-    if(cx>=r.left&&cx<=r.right&&cy>=r.top&&cy<=r.bottom){newOver=i;break;}
-  }
-  if(newOver!==TD.overSet){
-    // Clear old highlight
-    if(TD.overSet!==null&&sets[TD.overSet]){
-      sets[TD.overSet].classList.remove('card-drag-over','card-drag-invalid');
-    }
-    TD.overSet=newOver;
-    if(newOver!==null){
-      const card=myHand.find(c=>c.id===TD.cardId);
-      const set=getTableSets()[newOver];
-      const fits=card&&set&&([...set,card].some(t=>validSet([...set,card]))||validSet([card,...set]));
-      sets[newOver].classList.add(fits?'card-drag-over':'card-drag-invalid');
-    }
-  }
-}
-
-function tdEnd(e){
-  document.removeEventListener('mousemove',tdMove);document.removeEventListener('mouseup',tdEnd);
-  document.removeEventListener('touchmove',tdMove);document.removeEventListener('touchend',tdEnd);
-  if(!TD.active)return;
-
-  // Clean up ghost & highlight
-  if(TD.ghost){TD.ghost.remove();TD.ghost=null;}
-  if(TD.pc)TD.pc.classList.remove('dragging-to-table');
-  const sets=[...document.getElementById('table-sets').querySelectorAll('.tset')];
-  if(TD.overSet!==null&&sets[TD.overSet]){
-    sets[TD.overSet].classList.remove('card-drag-over','card-drag-invalid');
+  // Remove card from its source
+  if(src==='hand'){
+    myHand    = myHand.filter(c=>c.id!==card.id);
+    handOrder = handOrder.filter(id=>id!==card.id);
+  } else {
+    // source is a table set — remove from it
+    rSets[rSel.si] = rSets[rSel.si].filter((_,k)=>k!==rSel.ci);
+    // Clean up empty sets
+    rSets = rSets.filter(s=>s.length>0);
+    // Adjust ti if source set was before target and got removed
+    if(src==='table' && rSel.si < ti) ti--;
+    ti = Math.max(0, Math.min(ti, rSets.length-1));
   }
 
-  if(TD.moved&&TD.overSet!==null){
-    // Attempt to add card to the hovered set — does NOT end turn
-    const card=myHand.find(c=>c.id===TD.cardId);
-    const si=TD.overSet;
-    const set=getTableSets()[si];
-    if(card&&set){
-      for(const t of[[...set,card],[card,...set]]){
-        if(validSet(t)){
-          handOrder=handOrder.filter(id=>id!==card.id);
-          sendAddToSet(card.id,si);
-          // NOTE: sendAddToSet calls server which ends turn via nextTurn()
-          // To allow multiple drops without ending turn we'd need a server change.
-          // For now each add-to-set is one action (server advances turn).
-          // Multiple free drags within a turn require a "batch add" feature.
-          break;
-        }
-      }
-    }
-  }
-
-  TD.active=false;TD.moved=false;TD.ghost=null;TD.pc=null;TD.cardId=null;TD.overSet=null;
+  // Add card to target set
+  rSets[ti].push(card);
+  rSel = null;
+  render();
 }
 
+// ── END REARRANGE ─────────────────────────────────────────────────────────────
 // ── RENDER ────────────────────────────────────────────────────────────────────
+
 function render(){renderOpp();renderTable();renderHand();renderStage();renderDeck();renderStatus();renderTurnRibbon();}
 
 function renderOpp(){
@@ -715,37 +635,59 @@ function renderTable(){
   const mt=myTurn();
   wo.classList.toggle('show',!mt&&sv&&sv.phase==='playing');
 
-  if(rearrange)hdr.textContent='— REARRANGE — pick a card, click a set to move —';
-  else if(!iMadeDrop())hdr.textContent='— TABLE — drop a set from your hand first —';
-  else hdr.textContent='— TABLE — drag a hand card onto a set to add it —';
+  if(rearrange){
+    hdr.textContent=rSel
+      ?`— REARRANGE — ${rSel.rank}${rSel.suit} selected — click a set to place it —`
+      :'— REARRANGE — click any card to select it, then click a set to drop it —';
+  } else if(!iMadeDrop()){
+    hdr.textContent='— TABLE — drop a set from your hand first —';
+  } else {
+    hdr.textContent='— TABLE — click a set to highlight, then click a hand card to add —';
+  }
 
-  const sets=getTableSets();
-  if(sets.length===0){con.innerHTML='<div id="no-sets-msg">No sets on table yet</div>';return;}
+  const sets=rearrange?rSets:(sv?.tableSets||[]);
+  if(!rearrange&&sets.length===0){con.innerHTML='<div id="no-sets-msg">No sets on table yet</div>';return;}
+  if(rearrange&&sets.length===0&&!rSel&&myHand.length===0){con.innerHTML='<div id="no-sets-msg">No sets on table yet</div>';}
 
   for(let i=0;i<sets.length;i++){
     const set=sets[i];
     const el=document.createElement('div');
     const ok=set.length>=3&&validSet(set);
+
     let cls='tset';
-    if(rearrange){cls+=ok?' rv':' ri';if(picked&&picked.si!==i)cls+=' dt';}
-    else if(hlSet===i)cls+=' hl';
+    if(rearrange){
+      cls+=ok?' rmode-ok':' rmode-bad';
+      // If a card is selected, highlight this set as a valid drop target
+      if(rSel) cls+=' rmode-target';
+    } else {
+      if(hlSet===i) cls+=' hl';
+    }
     el.className=cls;
 
-    if(!rearrange){
+    // Clicking the set background drops selected card here (rearrange)
+    if(rearrange&&rSel){
+      el.onclick=(()=>{const ti=i;return ()=>rDropIntoSet(ti);})(i);
+    } else if(!rearrange){
       el.onclick=(e)=>{if(e.target===el)clickSet(i);};
-    } else if(picked&&picked.si!==i){
-      el.onclick=()=>dropInto(i);el.title='Drop picked card here';
     }
 
     for(let j=0;j<set.length;j++){
       const c=set[j];
+      const isSel=rSel&&rSel.id===c.id&&rSel.src==='table';
       const ce=mkCard(c,false,false);
       if(rearrange){
-        const isP=picked&&picked.si===i&&picked.ci===j;
-        if(isP)ce.classList.add('pu');
         ce.style.cursor='pointer';
-        ce.title='Click to pick up and move';
-        ce.onclick=(e)=>{e.stopPropagation();pickCard(i,j);};
+        if(isSel) ce.classList.add('rsel');
+        ce.title=isSel?'Selected — click a set to place it':'Click to select this card';
+        ce.onclick=(()=>{const cc=c,si=i,ci=j;return (e)=>{
+          e.stopPropagation();
+          if(rSel&&rSel.id!==cc.id){
+            // A different card already selected — drop into this set? No — select this one instead
+            rSelectCard(cc,'table',si,ci);
+          } else {
+            rSelectCard(cc,'table',si,ci);
+          }
+        };})(c,i,j);
       } else if(iMadeDrop()&&mt){
         ce.onclick=(e)=>{e.stopPropagation();clickSet(i);};
         ce.oncontextmenu=(e)=>{e.preventDefault();poachCard(i,j);};
@@ -756,35 +698,6 @@ function renderTable(){
       el.appendChild(ce);
     }
     con.appendChild(el);
-  }
-  if(rearrange){
-    if(picked){
-      const btn=document.createElement('button');
-      btn.className='btn btn-blue new-set-btn';btn.textContent='→ New Set';btn.onclick=splitNew;
-      con.appendChild(btn);
-    }
-    // Show hand cards as draggable into rearrange
-    if(myHand.length>0){
-      const pullDiv=document.createElement('div');
-      pullDiv.style.cssText='display:flex;flex-wrap:wrap;gap:4px;align-items:flex-end;border:1px dashed rgba(201,168,76,.3);border-radius:6px;padding:5px 7px;align-self:center;';
-      pullDiv.title='Click a card to add it to the table for rearranging';
-      const lbl=document.createElement('div');
-      lbl.style.cssText='font-size:.52rem;color:rgba(201,168,76,.5);width:100%;margin-bottom:3px;letter-spacing:.08em;text-transform:uppercase;';
-      lbl.textContent='Your hand — click to add to table';
-      pullDiv.appendChild(lbl);
-      const byId=Object.fromEntries(myHand.map(c=>[c.id,c]));
-      for(const id of handOrder){
-        if(id==='SPACER')continue;
-        const c=byId[id];if(!c)continue;
-        const ce=mkCard(c,false,false);
-        ce.style.cssText+='width:52px;height:72px;cursor:pointer;margin-right:-18px;';
-        ce.querySelector('.cr').style.fontSize='1rem';
-        ce.title=`Add ${c.rank}${c.suit} to table for rearranging`;
-        ce.onclick=(()=>{const cid=c.id;return (e)=>{e.stopPropagation();pullHandCardIntoRearrange(cid);};})();
-        pullDiv.appendChild(ce);
-      }
-      if(myHand.length>0)con.appendChild(pullDiv);
-    }
   }
 }
 
@@ -823,16 +736,16 @@ function renderHand(){
     const el=mkCard(c,true,sel);
     el.classList.add('hc');
     el.dataset.id=id;
-    el.onclick=(e)=>{if(DR.moved||TD.moved)return;toggleCard(id);};
-    // Both drag systems listen — DR for reorder, TD for drop-to-table
-    el.addEventListener('mousedown',(e)=>{
-      // We delay deciding which drag to use until movement direction is known
-      drStart(e);
-      tdStart(e,id);
-    });
-    el.addEventListener('touchstart',(e)=>{
-      drStart(e);tdStart(e,id);
-    },{passive:false});
+    if(rearrange){
+      // In rearrange mode, clicking a hand card selects it (no drag)
+      const isSel=rSel&&rSel.id===id;
+      if(isSel) el.classList.add('rsel');
+      el.onclick=(()=>{const cc=c;return (e)=>{e.stopPropagation();rSelectCard(cc,'hand',-1,-1);};})(c);
+    } else {
+      el.onclick=(e)=>{if(DR.moved)return;toggleCard(id);};
+      el.addEventListener('mousedown',drStart);
+      el.addEventListener('touchstart',drStart,{passive:false});
+    }
     con.appendChild(el);
   }
   document.getElementById('hand-cnt').textContent=`${myHand.length} cards`;
@@ -883,22 +796,26 @@ function renderStatus(){
   const bCancelR=document.getElementById('btn-cancel-r');
   if(rearrange){
     bRear.textContent='✓ Commit';bRear.className='btn btn-gold';
-    bReset.style.display='';   // show reset
-    bCancelR.style.display=''; // show cancel
+    bReset.style.display='';bCancelR.style.display='';
     bEnd.style.display='none';
-    bDrop.disabled=staged.length===0;bStage.disabled=selected.length<3;
+    // Normal staging still works during rearrange
+    bDrop.disabled=staged.length===0;
+    bStage.disabled=selected.length<3;
     bRear.disabled=false;
+    // Disable draw while in rearrange (must commit or cancel first)
+    document.getElementById('deck-btn').style.opacity='0.3';
+    document.getElementById('deck-btn').style.pointerEvents='none';
   } else {
     bRear.textContent='Rearrange Table';bRear.className='btn btn-blue';
-    bReset.style.display='none';
-    bCancelR.style.display='none';
+    bReset.style.display='none';bCancelR.style.display='none';
     bEnd.style.display='';bEnd.disabled=true;
     bDrop.disabled=staged.length===0||!mt;
     bStage.disabled=selected.length<3||!mt;
-    bRear.disabled=!mt||!iMadeDrop()||getTableSets().length===0;
+    bRear.disabled=!mt||!iMadeDrop()||(sv?.tableSets||[]).length===0;
+    document.getElementById('deck-btn').style.opacity=mt?'1':'0.4';
+    document.getElementById('deck-btn').style.pointerEvents=mt?'':'none';
   }
-  document.getElementById('btn-clear').disabled=!mt;
-  document.getElementById('deck-btn').style.opacity=mt&&!rearrange?'1':'0.4';
+  document.getElementById('btn-clear').disabled=!mt&&!rearrange;
 }
 
 function renderTurnRibbon(){
@@ -974,13 +891,9 @@ function drMove(e){
   const cy=e.touches?e.touches[0].clientY:e.clientY;
   if(!DR.moved&&Math.abs(cx-DR.sx)<5&&Math.abs(cy-DR.sy)<5)return;
   // If TD already went active, abort DR
-  if(TD.moved){drCancel();return;}
   if(e.cancelable)e.preventDefault();
   if(!DR.moved){
     // Cancel TD
-    if(TD.ghost){TD.ghost.remove();TD.ghost=null;}
-    if(TD.pc)TD.pc.classList.remove('dragging-to-table');
-    TD.active=false;TD.moved=false;
     DR.moved=true;
     const src=DR.pc;const gh=src.cloneNode(true);gh.id='drag-ghost';
     gh.style.cssText=`width:${src.offsetWidth}px;height:${src.offsetHeight}px;position:fixed;pointer-events:none;z-index:9999;transform:rotate(4deg) scale(1.07);box-shadow:4px 12px 28px rgba(0,0,0,.6);animation:none;transition:none;`;
