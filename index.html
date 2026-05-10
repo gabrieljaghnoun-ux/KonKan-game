@@ -177,6 +177,8 @@
   .modal table td{padding:4px 8px;color:rgba(245,240,232,.75);border-bottom:1px solid rgba(201,168,76,.1);}
 
   /* MISC */
+  /* rearrange hand-pull panel inside table */
+  #table-sets .pull-hand-panel{display:flex;flex-wrap:wrap;gap:4px;align-items:flex-end;border:1px dashed rgba(201,168,76,.3);border-radius:6px;padding:5px 7px;align-self:center;}
   @keyframes pfx{0%,100%{background:var(--felt)}50%{background:rgba(231,76,60,.28)}}
   #table-wrap.pf{animation:pfx .5s ease 3;}
   .new-set-btn{align-self:center;padding:4px 10px;font-size:.6rem;}
@@ -253,6 +255,8 @@
       <button class="btn btn-out"  id="btn-stage"     onclick="stageSelection()">Stage Set</button>
       <button class="btn btn-gold" id="btn-drop"      onclick="sendDrop()" disabled>Drop All</button>
       <button class="btn btn-blue" id="btn-rearrange" onclick="toggleRearrange()">Rearrange Table</button>
+      <button class="btn btn-out"  id="btn-reset"     onclick="resetRearrange()" style="display:none;">↺ Reset Table</button>
+      <button class="btn btn-red"  id="btn-cancel-r"  onclick="cancelRearrange()" style="display:none;">✕ Cancel</button>
       <button class="btn btn-red"  id="btn-end"       onclick="endTurnAction()" disabled>End Turn</button>
     </div>
   </div>
@@ -317,7 +321,7 @@ function getRoomId(){
   location.hash=id;return id;
 }
 const ROOM_ID=getRoomId();
-const PARTY_HOST=`konkan.gabrieljaghnoun-ux.partykit.dev`;
+const PARTY_HOST=`konkan.YOUR_USERNAME.partykit.dev`;
 const WS_URL=`wss://${PARTY_HOST}/party/${ROOM_ID}`;
 const ROOM_URL=`${location.origin}${location.pathname}#${ROOM_ID}`;
 document.getElementById('room-link').textContent=ROOM_URL;
@@ -345,6 +349,8 @@ function send(msg){if(ws&&ws.readyState===1)ws.send(JSON.stringify(msg));}
 // ── STATE ─────────────────────────────────────────────────────────────────────
 let myId=null,sv=null,myHand=[],handOrder=[],selected=[],staged=[];
 let hlSet=null,rearrange=false,rearrangeSnap=null,rearrangeSets=null,picked=null;
+// Cards pulled from hand into rearrange (so we can return them on cancel)
+let rearrangeHandCards=[]; // array of card objects temporarily moved from hand to table
 
 // handOrder can contain card ids OR the string 'SPACER' for visual group separators
 function myTurn(){return sv&&sv.phase==='playing'&&sv.currentTurn===myId;}
@@ -488,42 +494,90 @@ function toggleRearrange(){
   if(!myTurn()||!iMadeDrop())return;
   if(rearrange)commitRearrange();else enterRearrange();
 }
+
 function enterRearrange(){
   rearrangeSnap=(sv?.tableSets||[]).map(s=>[...s]);
   rearrangeSets=rearrangeSnap.map(s=>[...s]);
+  rearrangeHandCards=[];
   rearrange=true;hlSet=null;selected=[];picked=null;render();
 }
+
 function commitRearrange(){
-  if(!tableOK(rearrangeSets)){alert('All sets must have 3+ valid cards before committing.');return;}
+  // Every set must have ≥3 valid cards
+  if(!tableOK(rearrangeSets)){
+    alert('Cannot commit: every set on the table must have at least 3 valid cards. Fix the red sets or click ↺ Reset Table.');
+    return;
+  }
   sendRearrangeCommit(rearrangeSets);
-  rearrange=false;rearrangeSnap=null;rearrangeSets=null;picked=null;render();
+  rearrange=false;rearrangeSnap=null;rearrangeSets=null;rearrangeHandCards=[];picked=null;render();
 }
+
+// Reset table to exactly what it was when Rearrange was clicked — never gets stuck
+function resetRearrange(){
+  if(!rearrangeSnap)return;
+  rearrangeSets=rearrangeSnap.map(s=>[...s]);
+  // Return any hand cards that were moved into the table back to hand
+  for(const c of rearrangeHandCards){
+    if(!myHand.find(x=>x.id===c.id)){
+      myHand.push(c);
+      if(!handOrder.includes(c.id))handOrder.push(c.id);
+    }
+  }
+  rearrangeHandCards=[];
+  picked=null;render();
+}
+
+// Cancel = reset + exit rearrange
 function cancelRearrange(){
-  // Always restore snapshot — this fixes the stuck bug
-  if(rearrangeSnap){rearrangeSets=rearrangeSnap.map(s=>[...s]);}
-  rearrange=false;rearrangeSnap=null;rearrangeSets=null;picked=null;render();
+  resetRearrange();
+  rearrange=false;rearrangeSnap=null;rearrangeSets=null;rearrangeHandCards=[];picked=null;render();
 }
+
+// Pick a card from ANY table set (no minimum check here — enforced at commit)
 function pickCard(si,ci){
   if(!rearrange)return;
+  // Clicking the already-picked card deselects it
   if(picked&&picked.si===si&&picked.ci===ci){picked=null;render();return;}
-  if(rearrangeSets[si].length<=3){flashSetEl(si,'ri');return;}
   picked={si,ci,card:rearrangeSets[si][ci]};render();
 }
+
+// Drop picked card into another set
 function dropInto(ti){
   if(!rearrange||!picked)return;
   const{si,ci,card}=picked;
   if(ti===si){picked=null;render();return;}
-  if(rearrangeSets[si].length<=3){alert('Set only has 3 cards — cannot remove.');return;}
+  // Remove from source
   rearrangeSets[si]=rearrangeSets[si].filter((_,k)=>k!==ci);
-  const ti2=ti>si?ti-1:ti;
-  if(ti2>=0&&ti2<rearrangeSets.length)rearrangeSets[ti2].push(card);
+  // Remove empty sets but track the adjusted target index
+  const srcEmpty=rearrangeSets[si].length===0;
+  if(srcEmpty)rearrangeSets.splice(si,1);
+  // Recalculate target index after potential splice
+  let ti2=srcEmpty&&ti>si?ti-1:ti;
+  ti2=Math.max(0,Math.min(ti2,rearrangeSets.length-1));
+  rearrangeSets[ti2].push(card);
   picked=null;render();
 }
+
+// Split picked card into its own new set (for building a new group/sequence)
 function splitNew(){
   if(!rearrange||!picked)return;
   const{si,ci,card}=picked;
-  if(rearrangeSets[si].length<=3){alert('Set only has 3 cards — cannot remove.');return;}
   rearrangeSets[si]=rearrangeSets[si].filter((_,k)=>k!==ci);
+  if(rearrangeSets[si].length===0)rearrangeSets.splice(si,1);
+  rearrangeSets.push([card]);
+  picked=null;render();
+}
+
+// Pull a card from your hand into the rearrange (adds it to a temp set)
+function pullHandCardIntoRearrange(cardId){
+  if(!rearrange)return;
+  const card=myHand.find(c=>c.id===cardId);
+  if(!card)return;
+  // If there's a picked table card, try to merge them into the same new set
+  rearrangeHandCards.push(card);
+  myHand=myHand.filter(c=>c.id!==cardId);
+  handOrder=handOrder.filter(id=>id!==cardId);
+  // Create a new 1-card set — player can then move it via rearrange UI
   rearrangeSets.push([card]);
   picked=null;render();
 }
@@ -672,10 +726,8 @@ function renderTable(){
       if(rearrange){
         const isP=picked&&picked.si===i&&picked.ci===j;
         if(isP)ce.classList.add('pu');
-        const locked=set.length<=3;
-        ce.style.cursor=locked?'not-allowed':'pointer';
-        ce.title=locked?'Set has 3 cards — cannot remove':'Click to pick up';
-        if(locked)ce.style.opacity='0.65';
+        ce.style.cursor='pointer';
+        ce.title='Click to pick up and move';
         ce.onclick=(e)=>{e.stopPropagation();pickCard(i,j);};
       } else if(iMadeDrop()&&mt){
         ce.onclick=(e)=>{e.stopPropagation();clickSet(i);};
@@ -688,10 +740,34 @@ function renderTable(){
     }
     con.appendChild(el);
   }
-  if(rearrange&&picked){
-    const btn=document.createElement('button');
-    btn.className='btn btn-blue new-set-btn';btn.textContent='+ New Set';btn.onclick=splitNew;
-    con.appendChild(btn);
+  if(rearrange){
+    if(picked){
+      const btn=document.createElement('button');
+      btn.className='btn btn-blue new-set-btn';btn.textContent='→ New Set';btn.onclick=splitNew;
+      con.appendChild(btn);
+    }
+    // Show hand cards as draggable into rearrange
+    if(myHand.length>0){
+      const pullDiv=document.createElement('div');
+      pullDiv.style.cssText='display:flex;flex-wrap:wrap;gap:4px;align-items:flex-end;border:1px dashed rgba(201,168,76,.3);border-radius:6px;padding:5px 7px;align-self:center;';
+      pullDiv.title='Click a card to add it to the table for rearranging';
+      const lbl=document.createElement('div');
+      lbl.style.cssText='font-size:.52rem;color:rgba(201,168,76,.5);width:100%;margin-bottom:3px;letter-spacing:.08em;text-transform:uppercase;';
+      lbl.textContent='Your hand — click to add to table';
+      pullDiv.appendChild(lbl);
+      const byId=Object.fromEntries(myHand.map(c=>[c.id,c]));
+      for(const id of handOrder){
+        if(id==='SPACER')continue;
+        const c=byId[id];if(!c)continue;
+        const ce=mkCard(c,false,false);
+        ce.style.cssText+='width:52px;height:72px;cursor:pointer;margin-right:-18px;';
+        ce.querySelector('.cr').style.fontSize='1rem';
+        ce.title=`Add ${c.rank}${c.suit} to table for rearranging`;
+        ce.onclick=(()=>{const cid=c.id;return (e)=>{e.stopPropagation();pullHandCardIntoRearrange(cid);};})();
+        pullDiv.appendChild(ce);
+      }
+      if(myHand.length>0)con.appendChild(pullDiv);
+    }
   }
 }
 
@@ -786,13 +862,20 @@ function renderStatus(){
   bl.classList.toggle('show',mt&&!iMadeDrop()&&getTableSets().length===0&&staged.length===0);
   br.classList.toggle('show',rearrange);
 
+  const bReset=document.getElementById('btn-reset');
+  const bCancelR=document.getElementById('btn-cancel-r');
   if(rearrange){
-    bRear.textContent='Commit Rearrange';bRear.className='btn btn-gold';
-    bEnd.textContent='Cancel Rearrange';bEnd.disabled=false;
+    bRear.textContent='✓ Commit';bRear.className='btn btn-gold';
+    bReset.style.display='';   // show reset
+    bCancelR.style.display=''; // show cancel
+    bEnd.style.display='none';
     bDrop.disabled=staged.length===0;bStage.disabled=selected.length<3;
+    bRear.disabled=false;
   } else {
     bRear.textContent='Rearrange Table';bRear.className='btn btn-blue';
-    bEnd.textContent='End Turn';bEnd.disabled=true;
+    bReset.style.display='none';
+    bCancelR.style.display='none';
+    bEnd.style.display='';bEnd.disabled=true;
     bDrop.disabled=staged.length===0||!mt;
     bStage.disabled=selected.length<3||!mt;
     bRear.disabled=!mt||!iMadeDrop()||getTableSets().length===0;
