@@ -321,7 +321,7 @@ function getRoomId(){
   location.hash=id;return id;
 }
 const ROOM_ID=getRoomId();
-const PARTY_HOST=`konkan.YOUR_USERNAME.partykit.dev`;
+const PARTY_HOST=`konkan.gabrieljaghnoun-ux.partykit.dev`;
 const WS_URL=`wss://${PARTY_HOST}/party/${ROOM_ID}`;
 const ROOM_URL=`${location.origin}${location.pathname}#${ROOM_ID}`;
 document.getElementById('room-link').textContent=ROOM_URL;
